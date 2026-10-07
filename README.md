@@ -19,9 +19,12 @@ make build
 make shell PROJECT=/absolute/path/to/project
 ```
 
-`run` is an alias for `shell`. `make help` lists targets. For IDE integration,
-open this repository with **Dev Containers: Reopen in Container**; this builds
-locally and uses the same default network and privilege restrictions.
+`run` is an alias for `shell`. `make help` lists targets. Open the host project
+in the Mac IDE; the container shares its source through the bind mount.
+An IDE connection to the container is optional. This repository's
+**Dev Containers: Reopen in Container** configuration builds a separate offline
+container; it does not attach to the Make-managed remote environment or mount
+the launcher's agent state volumes.
 
 The launcher mounts only `PROJECT` read-write at `/workspace/<project-name>`.
 Edits and deletions affect host files. Optional `MOUNTS` YAML has `readOnly` and
@@ -36,7 +39,9 @@ make shell PROJECT=/absolute/path/to/project MOUNTS=mounts.local.yaml
 
 Networking defaults to `none`. `NETWORK=bridge` explicitly permits unrestricted
 Docker bridge networking, including reachable internal services. Network
-allowlist enforcement is not implemented yet. Neither the host home nor the
+allowlists are optional; the experimental implementation is kept on
+`feat/network-allowlist-experiment` and is unavailable on `main`.
+Neither the host home nor the
 Docker socket is mounted. Processes can access all mounted source and agent
 credentials allowed by their container permissions. Codex uses the container
 boundary with `on-request` approvals (the model decides when to request
