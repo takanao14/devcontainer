@@ -46,7 +46,15 @@ make smoke-daemon
 `smoke-daemon` の成功だけではホストのバインドマウントを検証したことにはならない。
 どちらの結合テストも認証情報を使用せず、終了時にテスト用ボリュームを削除する。
 
-## 未検証の項目
+## 検証状況
 
-Forgejo 上での workflow 実行、公開用 Secret の登録、レジストリへの公開は未検証。
-ローカルのテスト成功と、CI 上でのビルド・公開成功は区別する。
+[CI 実行 #1](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/1)で、
+amd64 ビルド、ランチャー検証、権限・永続化テスト、レジストリへの公開が成功した。
+公開タグは `ci-478ed3bb4bab3216faeaf698a96563f066bd68ac-533-1`。
+CLI は Codex 0.160.1、Claude Code 2.1.292。Secret の利用も確認済み。
+
+arm64 のローカルビルドは検証済みだが、CI は runner のネイティブアーキテクチャのみを公開する。
+実際の CLI サインインと複数アーキテクチャでの公開は未検証。
+
+手元の OrbStack からの公開イメージ取得は、レジストリへの HTTPS 接続で `EOF` となり未完了。
+ホスト側の HTTPS 接続は認証要求（401）を返すため、Docker daemon 側の接続経路の調査が必要。

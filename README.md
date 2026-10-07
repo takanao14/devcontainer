@@ -58,7 +58,7 @@ runner needs Docker, Make, Bash, jq, Mike Farah yq v4, Git, and Node.js for chec
 filesystem paths. Local `make smoke` separately verifies host bind mounts. Publication targets
 `forgejo.home.butaco.net/takanao/devcontainer-images`; the registry hostname is
 defined in the workflow. Configure `REGISTRY_USER` and `REGISTRY_PASSWORD` secrets with package write
-access. CI execution and registry publication have not been verified here.
+access. CI run #1 verified the amd64 build, tests, authentication, and registry publication.
 The initial workflow builds the runner's native architecture only.
 See [CI setup and verification](docs/ci.md) for required settings and test coverage.
 
