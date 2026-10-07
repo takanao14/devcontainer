@@ -9,6 +9,11 @@ escalation with `no-new-privileges`.
 Docker must be running on the host. The launcher uses Bash and jq; YAML mounts
 require Mike Farah yq v4. No Python runtime is required.
 
+During configuration development, Apple Silicon Macs use locally built ARM64
+images through Docker / OrbStack. The existing Forgejo CI builds and publishes
+AMD64 images; ARM64 publication is not available yet. Local builds remain the
+ARM64 usage path until the configuration is stable and ARM64 CI is available.
+
 ```sh
 make build
 make shell PROJECT=/absolute/path/to/project
@@ -62,15 +67,16 @@ access. CI run #1 verified the amd64 build, tests, authentication, and registry 
 The initial workflow builds the runner's native architecture only.
 See [CI setup and verification](docs/ci.md) for required settings and test coverage.
 
-Use the published reference from CI, optionally a digest, to fetch and run
-without building locally:
+For AMD64, use the published reference from CI, optionally a digest, to fetch
+and run without building locally:
 
 ```sh
 make pull IMAGE_REF=registry.example.com/owner/devcontainer-images:ci-commit-run-attempt
 make shell IMAGE_REF=registry.example.com/owner/devcontainer-images:ci-commit-run-attempt PROJECT=/absolute/path/to/project
 ```
 
-Updates select a newer published image; rollback selects a previous reference.
+Local ARM64 updates use `make rebuild`; published-image updates select a newer
+reference, and rollback selects a previous reference.
 State format changes may require restoring a matching volume backup. Registry
 retention and scheduled updates are not configured.
 
