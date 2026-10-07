@@ -53,6 +53,7 @@ test: ## Test launcher validation
 
 verify: ## Check the image without credentials
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" bash -ec 'test "$$(id -u)" != 0; if sudo -n true 2>/dev/null; then exit 1; fi; codex --version; claude --version; diff /usr/local/share/devcontainer-images/versions.txt <(codex --version; claude --version; node --version)'
+	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" bash -ec 'yq --version; shellcheck --version; test "$$(printf "value: true\n" | yq -o=json "." | jq -r .value)" = true; printf "#!/bin/sh\nexit 0\n" | shellcheck -s sh -'
 
 smoke: ## Check mounts and state persistence with temporary fixtures
 	bash tests/smoke_container.sh

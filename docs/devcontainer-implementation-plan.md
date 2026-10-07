@@ -21,6 +21,7 @@ Codex の標準の管理 daemon の起動・停止は、リモート利用のラ
 
 - ベース OS は Ubuntu 26.04、実行ユーザーは非 root の `developer`。
 - イメージは Git、Make、GCC/G++ と共通の基本ツールを備える。
+  検索・データ処理・シェル検証には rg、jq、Mike Farah yq v4、ShellCheck を備える。
 - イメージは Codex CLI、Claude Code と必要なランタイムを備える。CI がイメージの
   ビルド・検証・レジストリへの公開を担い、利用側は公開済みイメージを取得して起動する。
 - CLI は CI の更新ビルド時点の最新の正式リリースを使用する。

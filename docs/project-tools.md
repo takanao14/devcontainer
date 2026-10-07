@@ -6,10 +6,14 @@
 ## 共通ベース
 
 Ubuntu、Bash、Git（サブモジュールを含む）、CA 証明書、curl、wget、
-GCC/G++、Make（`build-essential`）、OpenSSH クライアント、jq、ripgrep、rsync、
+GCC/G++、Make（`build-essential`）、OpenSSH クライアント、jq、Mike Farah yq v4、ShellCheck、ripgrep、rsync、
 tar、zip/unzip、sudo、基本的なプロセス・ネットワークユーティリティ。
 これらは Dockerfile で提供している。エージェント実行用に Codex CLI、Claude Code、
 Node.js と npm も共通イメージに含む。
+yq は 4.54.1 に固定し、AMD64 / ARM64 の配布バイナリーを公開 SHA-256 で検証する。
+ShellCheck は Ubuntu のパッケージを使用する。
+Ubuntu の Node.js / npm パッケージの依存関係には Python 3 が含まれる。
+Python のプロジェクト用ライブラリや Ansible は共通イメージの提供対象には含めない。
 
 ## プロジェクト固有のツール
 

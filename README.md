@@ -2,7 +2,8 @@
 
 Ubuntu 26.04 development image with Codex CLI, Claude Code, a non-root
 `developer` user, UTF-8 locale, Git, SSH client, GCC/G++, Make, and basic
-command-line tools. sudo requires password authentication; the user has no
+command-line tools, including ripgrep, jq, Mike Farah yq v4.54.1, and ShellCheck.
+sudo requires password authentication; the user has no
 password configured in the image. The launcher also prevents privilege
 escalation with `no-new-privileges`.
 

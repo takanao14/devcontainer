@@ -19,6 +19,9 @@
   requirements or pins, not independently verified latest releases.
 - Keep the common image generic; place project-specific toolchains in derived
   images.
+- Prefer dedicated tools: rg for search, jq for JSON, yq for YAML, and ShellCheck
+  for shell analysis. Report missing tools before writing replacement scripts;
+  use Python when the task or project needs it.
 
 ## Container boundaries
 
