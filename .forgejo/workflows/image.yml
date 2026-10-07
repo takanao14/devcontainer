@@ -1,0 +1,59 @@
+name: Development image
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CONTAINER_REGISTRY: forgejo.home.butaco.net
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test launcher
+        run: |
+          bash --version
+          yq --version
+          jq --version
+          make test
+      - name: Build and verify
+        env:
+          COMMIT: ${{ forgejo.sha }}
+          RUN_ID: ${{ forgejo.run_id }}
+          ATTEMPT: ${{ forgejo.run_attempt }}
+        run: |
+          set -eu
+          image_ref="devcontainer-images:ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
+          make rebuild IMAGE_REF="$image_ref"
+          make verify IMAGE_REF="$image_ref"
+          make smoke-daemon IMAGE_REF="$image_ref"
+      - name: Publish verified image
+        if: forgejo.event_name != 'pull_request' && forgejo.ref == 'refs/heads/main'
+        env:
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          REPOSITORY: ${{ forgejo.repository }}
+          COMMIT: ${{ forgejo.sha }}
+          RUN_ID: ${{ forgejo.run_id }}
+          ATTEMPT: ${{ forgejo.run_attempt }}
+        run: |
+          set -eu
+          : "${REGISTRY_USER:?Set REGISTRY_USER}"
+          : "${REGISTRY_PASSWORD:?Set REGISTRY_PASSWORD}"
+          export DOCKER_CONFIG
+          DOCKER_CONFIG=$(mktemp -d)
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          printf '%s' "$REGISTRY_PASSWORD" | docker login "$CONTAINER_REGISTRY" --username "$REGISTRY_USER" --password-stdin
+          tag="ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
+          repository=$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          target="$CONTAINER_REGISTRY/$repository:$tag"
+          docker tag "devcontainer-images:$tag" "$target"
+          docker push "$target"
+          printf 'Published %s\n' "$target"
+          docker image inspect "$target" --format '{{json .RepoDigests}}'

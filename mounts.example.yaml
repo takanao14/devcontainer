@@ -1,0 +1,4 @@
+readOnly:
+  - /path/to/reference
+readWrite:
+  - /path/to/related-project

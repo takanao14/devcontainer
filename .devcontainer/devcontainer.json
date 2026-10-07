@@ -1,0 +1,11 @@
+{
+  "name": "Ubuntu agent development",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "developer",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/devcontainer-images,type=bind",
+  "workspaceFolder": "/workspace/devcontainer-images",
+  "runArgs": ["--cap-drop=ALL", "--security-opt=no-new-privileges", "--network=none"]
+}
