@@ -61,7 +61,16 @@ arm64 のローカルビルド、権限・マウント・状態保存のテス�
 再起動後の認証・履歴保持は、利用者の macOS / OrbStack 環境で確認済み。
 CI は runner のネイティブアーキテクチャのみを公開し、複数アーキテクチャでの公開は未検証。
 リモート終了処理のスモークテストと既存のマウント・状態保存テストは、
-ローカル ARM64 イメージで実行済み。追加した CI のスモークテストは Forgejo 上では未実行。
+ローカル ARM64 イメージで実行済み。
+
+[CI 実行 #3](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/3)で、
+共通ツール追加後の AMD64 ビルド、yq 4.54.1 の SHA-256 検証と YAML/JSON 変換、
+ShellCheck 0.11.0、権限・永続化・リモート終了処理のテスト、レジストリ公開が成功した。
+実行 #2 は runner に rg がないためテストで失敗し、テスト側の依存を修正して再実行した。
+公開タグは `ci-06f212e6b135253e661c2acdc33101b68a1449a0-540-1`、
+公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
+digest は `sha256:884afb83a0ea0004e13f373edebdc0d939e61a2ea6ae597d627028f4f864a9dc`。
+これは AMD64 の成果物であり、ARM64 の CI ビルド・公開は引き続き未対応。
 
 手元の OrbStack からの公開イメージ取得は、レジストリへの HTTPS 接続で `EOF` となり未完了。
 ホスト側の HTTPS 接続は認証要求（401）を返すため、Docker daemon 側の接続経路の調査が必要。
