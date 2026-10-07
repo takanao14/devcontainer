@@ -43,6 +43,12 @@ boundary with `on-request` approvals (the model decides when to request
 confirmation); Claude uses its default permission mode.
 CLI approval prompts do not make writable source read-only.
 
+Remote connections to containerized Claude Code and Codex have been user-verified.
+Smartphone approval and denial, and operation after tmux detachment, have also
+been user-verified. Automatic shutdown handling for Codex remote control is
+not yet integrated into the launcher.
+See [remote access and validation](docs/remote-access.md) for startup procedures.
+
 Codex and Claude have separate named volumes per canonical project path for
 configuration, authentication, and history. First sign-in happens inside the
 container (`codex login --device-auth` can be run from `make shell` for Codex).
