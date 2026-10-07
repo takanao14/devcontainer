@@ -36,7 +36,7 @@ for REMOTE_MODE in login-failure start-failure; do
     export REMOTE_MODE
     : > "$REMOTE_LOG"
     if /bin/bash "$repo/scripts/codex-remote.sh" >"$fixture/output" 2>&1; then exit 1; fi
-    if rg -q '^ready$' "$REMOTE_LOG"; then exit 1; fi
+    if grep -q '^ready$' "$REMOTE_LOG"; then exit 1; fi
     if [[ $REMOTE_MODE == start-failure ]]; then [[ $(tail -n 1 "$REMOTE_LOG") == 'remote-control stop' ]]; fi
 done
 for REMOTE_MODE in normal stop-failure timeout; do
@@ -46,18 +46,18 @@ for REMOTE_MODE in normal stop-failure timeout; do
     pid=$!
     ready=0
     for ((i=0; i<100; i++)); do
-        if rg -q '^ready$' "$REMOTE_LOG"; then ready=1; break; fi
+        if grep -q '^ready$' "$REMOTE_LOG"; then ready=1; break; fi
         sleep 0.02
     done
     if (( ! ready )); then kill -TERM "$pid"; wait "$pid" || true; exit 1; fi
     # EOF does not end the detached server, and startup never issues a code.
     kill -0 "$pid"
-    if rg -q 'remote-control pair' "$REMOTE_LOG"; then exit 1; fi
+    if grep -q 'remote-control pair' "$REMOTE_LOG"; then exit 1; fi
     kill -TERM "$pid"
     status=0
     wait "$pid" || status=$?
     [[ $status == 143 ]]
-    if [[ $REMOTE_MODE == timeout ]]; then rg -q 'did not stop cleanly' "$fixture/output"
+    if [[ $REMOTE_MODE == timeout ]]; then grep -q 'did not stop cleanly' "$fixture/output"
     else [[ $(tail -n 1 "$REMOTE_LOG") == 'remote-control stop' ]]; fi
 done
 printf 'Detached server startup, EOF survival, failure cleanup, and bounded shutdown passed\n'

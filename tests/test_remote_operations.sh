@@ -85,5 +85,5 @@ launch codex-remote-start
 export MOCK_MODE=stop-failure
 if launch codex-remote-stop; then exit 1; fi
 [[ ! -f $MOCK_STATE ]]
-rg -q 'did not stop cleanly' "$fixture/output"
+grep -q 'did not stop cleanly' "$fixture/output"
 printf 'Remote reuse, independent pairing/shell/stop, ownership checks, and startup cleanup passed\n'
