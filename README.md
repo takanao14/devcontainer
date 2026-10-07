@@ -45,13 +45,33 @@ CLI approval prompts do not make writable source read-only.
 
 Remote connections to containerized Claude Code and Codex have been user-verified.
 Smartphone approval and denial, and operation after tmux detachment, have also
-been user-verified. Automatic shutdown handling for Codex remote control is
-not yet integrated into the launcher.
+been user-verified. The Codex remote environment runs independently of terminals:
+
+```sh
+make codex-remote-start NETWORK=bridge
+make codex-remote-pair     # Initial pairing or adding a phone
+make codex-remote-shell   # Exiting this shell keeps the environment running
+make codex-remote-status
+make codex-remote-stop
+```
+
+Use the same `PROJECT` for each operation. `codex-remote` aliases the start
+operation. Start never issues a pairing code; pairing output is shown only in
+the requesting terminal. Stop removes the container and retains state volumes.
+Daemon stop has a 10-second timeout and a further 2-second kill grace period;
+Docker waits up to 15 seconds for container shutdown. Stop failures are reported.
+Starting an existing environment reuses it; changed mount, network, wrapper, or
+image-reference settings require stopping it first. Rebuilding the same image
+tag also requires stopping and starting to use the new image.
+The wrapper is passed to the existing image at launch; no image rebuild is needed.
 See [remote access and validation](docs/remote-access.md) for startup procedures.
 
 Codex and Claude have separate named volumes per canonical project path for
 configuration, authentication, and history. First sign-in happens inside the
 container (`codex login --device-auth` can be run from `make shell` for Codex).
+Reusing the Codex state volume after container recreation preserves access from
+an already paired phone; this has been user-verified with the phone registration
+retained.
 The launcher does not copy host credentials. It prints the volume names in a
 dry run. To clear saved state, stop sessions and remove the corresponding
 volume with `docker volume rm <volume-name>`; this also deletes configuration

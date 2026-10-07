@@ -52,4 +52,21 @@ third=$(PROJECT="$fixture/parent/main project" MOUNTS="" bash "$repo/scripts/lau
 mkdir -p "$fixture/comma,quote\"/project"
 args=$(PROJECT="$fixture/comma,quote\"/project" MOUNTS="" bash "$repo/scripts/launch.sh" shell)
 printf '%s' "$args" | jq -e 'any(.[]; contains("quote\"\"/project"))' >/dev/null
+if bash "$repo/scripts/launch.sh" codex-remote >/dev/null 2>&1; then
+    printf 'FAIL: accepted remote control without networking\n' >&2
+    exit 1
+fi
+dry=$(NETWORK=bridge DRY_RUN=1 bash "$repo/scripts/launch.sh" codex-remote)
+eval "set -- $dry"
+args=$(jq -n --args '$ARGS.positional' -- "$@")
+printf '%s' "$args" | jq -e '
+  .[index("--network") + 1] == "bridge" and
+  .[-3:-1] == ["bash", "-c"] and
+  index("--detach") != null and
+  (.[-1] | contains("approval_policy=\"on-request\"") and contains("remote-control stop") and
+    (contains("remote-control pair") | not))
+' >/dev/null
+remote_volumes=$(printf '%s' "$args" | jq -c '[.[] | select(startswith("type=volume"))]')
+shell_volumes=$(bash "$repo/scripts/launch.sh" shell | jq -c '[.[] | select(startswith("type=volume"))]')
+[[ $remote_volumes == "$shell_volumes" ]]
 printf 'Launcher schema, duplicate/overlap/collision checks, quoting, and stable volumes passed\n'

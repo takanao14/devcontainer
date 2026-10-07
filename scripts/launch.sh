@@ -13,9 +13,30 @@ canonical_directory() {
 command -v jq >/dev/null || fail 'jq is required'
 action=${1:-shell}
 if (( $# )); then shift; fi
-case "$action" in shell|codex|claude) ;; *) fail "Unknown action: $action" ;; esac
+case "$action" in
+    shell|codex|claude|codex-remote|codex-remote-start|codex-remote-stop|codex-remote-pair|codex-remote-shell|codex-remote-status) ;;
+    *) fail "Unknown action: $action" ;;
+esac
 if [[ ${1:-} == -- ]]; then shift; fi
 project=$(canonical_directory "${PROJECT:-$PWD}")
+if command -v sha256sum >/dev/null; then
+    identifier=$(printf '%s' "$project" | sha256sum)
+else
+    identifier=$(printf '%s' "$project" | shasum -a 256)
+fi
+identifier=${identifier:0:24}
+repo=$(cd -- "$(dirname -- "$0")/.." && pwd -P)
+docker=${DOCKER:-docker}
+if [[ $action == codex-remote* ]]; then
+    (( $# == 0 )) || fail 'Remote operations do not accept additional CLI arguments'
+    source "$repo/scripts/remote.sh"
+    case "$action" in
+        codex-remote-stop|codex-remote-pair|codex-remote-shell|codex-remote-status)
+            remote_operation
+            exit
+            ;;
+    esac
+fi
 paths=("$project")
 readonly_modes=(false)
 config=${MOUNTS:-}
@@ -56,14 +77,16 @@ for ((i=0; i<${#paths[@]}; i++)); do
 done
 network=${NETWORK:-none}
 case "$network" in none|bridge) ;; *) fail 'NETWORK must be none or bridge' ;; esac
-if command -v sha256sum >/dev/null; then
-    identifier=$(printf '%s' "$project" | sha256sum)
-else
-    identifier=$(printf '%s' "$project" | shasum -a 256)
+if [[ $action == codex-remote || $action == codex-remote-start ]]; then
+    [[ $network != none ]] || fail 'codex-remote requires NETWORK=bridge'
 fi
-identifier=${identifier:0:24}
 cmd=("${DOCKER:-docker}" run --rm --init --cap-drop=ALL --security-opt=no-new-privileges --network "$network" -i)
-if [[ -t 0 && -t 1 ]]; then cmd+=(-t); fi
+if [[ $action == codex-remote || $action == codex-remote-start ]]; then
+    cmd+=(--detach --name "$remote_name" --stop-timeout 15
+        --label "devcontainer-images.project=$project" --label devcontainer-images.role=codex-remote)
+elif [[ -t 0 && -t 1 ]]; then
+    cmd+=(-t)
+fi
 for ((i=0; i<${#paths[@]}; i++)); do
     path=${paths[i]}
     source_field="source=$path"
@@ -81,8 +104,15 @@ case "$action" in
     codex) cmd+=(codex --sandbox danger-full-access --ask-for-approval on-request) ;;
     claude) cmd+=(claude --permission-mode default) ;;
     shell) cmd+=(bash) ;;
+    codex-remote|codex-remote-start)
+        cmd+=(bash -c "$(cat "$repo/scripts/codex-remote.sh")")
+        ;;
 esac
 cmd+=("$@")
+if [[ $action == codex-remote || $action == codex-remote-start ]]; then
+    remote_start
+    exit
+fi
 if [[ ${DRY_RUN:-0} == 1 ]]; then
     printf '%q ' "${cmd[@]}"
     printf '\n'
