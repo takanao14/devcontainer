@@ -42,6 +42,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   mise 管理への移行後も、両プロジェクトの同じ検証をローカル ARM64 で確認した。
   リモート生成は bridge、それ以降の Go 検証はネットワークなしで実行する。
   派生イメージの CI 検証・公開は未実装。
+  Go/API の両アーキテクチャ向けロック検査は Forgejo workflow に含む。
 
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
   protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.22、ansible-core 2.21.4、
@@ -69,6 +70,8 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   暗号化・復号を確認し、direnv もダミー環境変数で確認した。
   ロック不足・不正チェックサムの拒否、プロジェクト設定による暗黙の切り替えがないことも
   確認した。実際の秘密情報の供給・復号と DNS preview/push は検証対象に含めていない。
+  Forgejo workflow はロック検査と DNS イメージのビルド・検証・公開を含む。
+  この追加分の Forgejo 上での実行は未確認。
 
 - homelab は、dotfiles から取り込んだ mise 設定とロックファイルで共通 Linux CLI の
   バージョンを管理している（ADR-0049）。確認時点の設定では Terragrunt 1.1.6、

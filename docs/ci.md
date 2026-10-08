@@ -8,14 +8,15 @@ main への push、pull request、手動実行でテストとイメージのビ�
 
 公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
 レジストリのホスト名は workflow の `CONTAINER_REGISTRY` に定義する。
-タグは `ci-<commit>-<run>-<attempt>` で、既存タグへの上書きを前提としない。
+共通イメージのタグは `ci-<commit>-<run>-<attempt>`、DNS 派生イメージは
+`dns-ci-<commit>-<run>-<attempt>` で、既存タグへの上書きを前提としない。
 CLI バージョンはイメージ内の `versions.txt` と検証ログ、公開先と digest は公開ログに残る。
 
 ## Runner と公開設定
 
 runner のジョブ環境には Docker CLI、Make、Bash、jq、Mike Farah yq v4、Git、
 checkout アクション用の Node.js が必要。Docker daemon へのアクセスと、
-Ubuntu・npm・checkout アクションの取得先への通信も必要になる。
+Ubuntu・npm・GitHub Releases・checkout アクションの取得先への通信も必要になる。
 
 リポジトリの Actions 設定には次を登録する。
 
@@ -35,9 +36,25 @@ make test
 make verify
 make smoke-daemon
 make smoke-remote
+make check-dns-lock
+make check-go-lock
+make check-common-lock
+make check-rust-lock
+make build-dns
+make verify-dns
+make verify-dns-lock
 ```
 
 - `test` はランチャーの設定検証を確認する。
+- `check-dns-lock` は宣言とロックの対応、および AMD64 / ARM64 両方の URL・SHA-256 を確認する。
+  Go/API の宣言・ロックも `check-go-lock` で同じ条件を確認する。
+  共通ツールは `check-common-lock`、Rust のコンポーネント指定と Python 依存グラフの
+  ファイル存在は `check-rust-lock` で確認する。Go/API と Rust のイメージビルド・実行検証は
+  引き続きローカルで行う。
+- DNS 派生イメージは同じ実行で検証した共通イメージからビルドする。
+  `verify-dns` は非 root 実行、バージョン、ダミーの暗号化・復号、direnv を確認する。
+  `verify-dns-lock` はロック欠落とチェックサム改変の拒否を確認するため、テスト用アーティファクトを取得する。
+  両イメージの検証成功後に公開を開始する。公開途中の失敗では、先に公開したタグが残る場合がある。
 - `verify` は非 root 実行、パスワードなし sudo の拒否、CLI のバージョン記録との一致を確認する。
 - `smoke-daemon` は一時的な名前付きボリュームを使い、読み取り専用アクセス、
   コンテナ再作成後の状態保持、CLI の起動オプションを確認する。
@@ -51,6 +68,13 @@ make smoke-remote
 どちらの結合テストも認証情報を使用せず、終了時にテスト用ボリュームを削除する。
 
 ## 検証状況
+
+DNS 派生イメージの CI ジョブへの追加はローカルで検査済み。Forgejo 上での実行・公開は未確認。
+mise 管理に移行した共通・Go/API・Rust/LED・DNS イメージの ARM64 ビルドと
+ツール検証はローカルで実行済み。再ビルド時の CLI は Codex 0.161.0、Claude Code 2.1.293。
+この共通イメージで daemon の状態保持とリモート終了処理も確認した。
+ロックの更新は `make lock-dns` と差分レビューで行う。CI はコミット済みロックを検査し、
+ロックの自動生成・更新はまだ行わない。
 
 [CI 実行 #1](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/1)で、
 amd64 ビルド、ランチャー検証、権限・永続化テスト、レジストリへの公開が成功した。

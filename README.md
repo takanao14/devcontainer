@@ -165,7 +165,10 @@ Resolved versions are recorded in `/usr/local/share/devcontainer-images/versions
 
 [Forgejo Actions](.forgejo/workflows/image.yml) tests, builds, and verifies on
 pull requests and main pushes. Main pushes and manual runs on main publish a
-unique `ci-<commit>-<run>-<attempt>` tag after verification. The `ubuntu-24.04`
+unique `ci-<commit>-<run>-<attempt>` common image tag and
+`dns-ci-<commit>-<run>-<attempt>` DNS image tag after both pass verification.
+DNS checks cover both platform lock records and rejection of missing locks and
+invalid checksums. The `ubuntu-24.04`
 runner needs Docker, Make, Bash, jq, Mike Farah yq v4, Git, and Node.js for checkout. CI uses named-volume smoke tests so the job and daemon need not share
 filesystem paths. Local `make smoke` separately verifies host bind mounts. Publication targets
 `forgejo.home.butaco.net/takanao/devcontainer-images`; the registry hostname is
