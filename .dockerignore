@@ -3,3 +3,7 @@
 !scripts/
 scripts/*
 !scripts/codex-daemon-prepare.sh
+!tools/
+tools/*
+!tools/common/
+!tools/common/**

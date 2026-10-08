@@ -12,18 +12,27 @@ RUN apt-get update \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
-# Published asset digests: https://github.com/mikefarah/yq/releases/tag/v4.54.1
+# Bootstrap version and digests are recorded in tools/common/SOURCE.
 RUN set -eu; \
     arch=$(dpkg --print-architecture); \
     case "$arch" in \
-        amd64) checksum=8e34fc298390875de416e6a4afcb8cabeceb25d9aa8506c1a2f9353cf702ea5f ;; \
-        arm64) checksum=189088da0c6429ec5178dfaab1a114805f6cab0b61b165ab236efedf1d57a71b ;; \
-        *) echo "Unsupported yq architecture: $arch" >&2; exit 1 ;; \
+        amd64) asset=x64; checksum=57ced973f968b8fbab07aa8e32bd7077d4a357e200a22356d98963c723c6de0a ;; \
+        arm64) asset=arm64; checksum=4b8cacffac83e8493fc5d1eef25f6365edba73ccbed5a1f3987b7cb3f5079656 ;; \
+        *) echo "Unsupported mise architecture: $arch" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL --retry 3 "https://github.com/mikefarah/yq/releases/download/v4.54.1/yq_linux_$arch" -o /tmp/yq; \
-    printf '%s  /tmp/yq\n' "$checksum" | sha256sum -c -; \
-    install -m 0755 /tmp/yq /usr/local/bin/yq; \
-    rm /tmp/yq
+    curl -fsSL --retry 3 "https://github.com/jdx/mise/releases/download/v2026.10.0/mise-v2026.10.0-linux-$asset" -o /tmp/mise; \
+    printf '%s  /tmp/mise\n' "$checksum" | sha256sum -c -; \
+    install -m 0755 /tmp/mise /usr/local/bin/mise; \
+    rm /tmp/mise
+
+COPY tools/common/ /usr/local/share/devcontainer-images/common-tools/
+RUN set -eu; \
+    export MISE_CONFIG_FILE=/usr/local/share/devcontainer-images/common-tools/config.toml; \
+    export MISE_DATA_DIR=/opt/dev-tools/mise; \
+    export MISE_CACHE_DIR=/tmp/mise-cache; \
+    mise install --yes --locked; \
+    ln -s "$(mise which yq)" /usr/local/bin/yq; \
+    rm -rf /tmp/mise-cache
 
 # Ubuntu's base image includes a user with UID 1000.
 RUN if id ubuntu >/dev/null 2>&1; then userdel -r ubuntu; fi \

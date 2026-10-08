@@ -1,0 +1,8 @@
+repo: takanao14/dotfiles
+commit: 44714eb116cdfea3e67be700121dcd005248e28f
+via: homelab/scripts/install/vendor
+config: dot_config/mise/config.toml (selected DNS tools)
+lock: dot_config/mise/mise.lock (selected DNS tools)
+bootstrap: mise 2026.10.0; official release SHASUMS256.txt
+dnscontrol: 5.3.0 matches homelab-private/.forgejo/workflows/dns.yml
+sops-backend: aqua:getsops/sops; imported checksum-backed SLSA lock, install-time provenance re-verification is not enabled

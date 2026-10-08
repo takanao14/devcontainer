@@ -1,0 +1,9 @@
+[settings]
+experimental = true
+lockfile = true
+
+[tools]
+"aqua:astral-sh/uv" = "0.12.22"
+rust = { version = "1.99.0", profile = "minimal", components = ["rustfmt", "clippy"] }
+"pipx:ansible-core" = "2.21.4"
+"pipx:ansible-lint" = { version = "26.9.0", with = ["ansible-core==2.21.4"] }

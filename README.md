@@ -27,6 +27,78 @@ An IDE connection to the container is optional. This repository's
 container; it does not attach to the Make-managed remote environment or mount
 the launcher's agent state volumes.
 
+The Go/API image adds Go 1.27.1 and Buf 1.73.0 with verified release checksums.
+Pinned mise 2026.10.0 installs them from committed Linux AMD64 / ARM64 locks.
+Runtime commands use image-owned paths rather than project-selected mise shims.
+Toolchain downloads at runtime are disabled (`GOTOOLCHAIN=local`).
+
+```sh
+make build-go
+make verify-go
+make check-go-lock
+make check-go-project PROJECT=/absolute/path/to/go-project
+make check-buf-project PROJECT=/absolute/path/to/led-image-api
+make codex IMAGE_REF=devcontainer-images:go-1.27.1 PROJECT=/absolute/path/to/go-project NETWORK=bridge
+```
+
+`check-go-project` downloads dependencies over bridge networking, then runs
+tests, race detection, vet, and build offline in a disposable source copy.
+The host source is read-only; the temporary module cache is deleted afterward.
+`check-buf-project` runs the project's `format-check`, `lint`, and
+`generate-check` Make targets in a disposable copy. Remote generation uses
+bridge networking and the project's pinned plugins.
+Go/API declarations and their origin are in `images/go/tools`. Use `make lock-go`
+after changing versions and review the lock diff before rebuilding.
+
+The Rust/LED image adds Rust 1.99.0, rustfmt, Clippy, protoc, ALSA and X11/Wayland
+development libraries, Python, ansible-core 2.21.4, and ansible-lint 26.9.0.
+Its toolchain is owned by the image; Cargo's cache remains writable by the user.
+mise declares Rust's profile and components and replays Ansible's committed
+Python dependency graphs with uv 0.12.22. rustup 1.29.1 remains checksum-pinned.
+
+```sh
+make build-rust
+make verify-rust
+make check-rust-lock
+make verify-rust-lock
+make check-rust-project PROJECT=/absolute/path/to/led-service2
+make codex IMAGE_REF=devcontainer-images:rust-1.99.0 PROJECT=/absolute/path/to/led-service2 NETWORK=bridge
+```
+
+`check-rust-project` requires initialized `led-image-api` submodule sources. It
+fetches locked crates, then checks the emulator build, formatting, Clippy,
+tests, Python tests, and Ansible lint offline in a disposable source copy.
+It does not connect display, audio, or LED devices or deploy services.
+Declarations and dependency sidecars are in `images/rust/tools`. Use `make lock-rust`
+with a built Rust image and review the config, lock, and sidecar changes together.
+The DNS image installs dnscontrol 5.3.0, SOPS 3.13.3, age 1.3.2, and direnv 2.37.1
+through pinned mise 2026.10.0 and the committed platform lockfile. Commands use
+direct image-owned paths, so project mise settings do not switch these tools.
+
+```sh
+make build-dns
+make verify-dns
+make verify-dns-lock  # Downloads an artifact to test checksum rejection
+make check-dns-project PROJECT=/absolute/path/to/homelab-private
+make codex IMAGE_REF=devcontainer-images:dns-5.3.0 PROJECT=/absolute/path/to/homelab-private NETWORK=bridge
+```
+
+`check-dns-project` runs `dns-record`'s `make check` offline in a disposable
+copy without loading credentials or `.envrc`. Verification uses temporary
+keys and dummy data for encryption; host keys are not mounted. direnv's shell
+hook and environment approval are not enabled automatically.
+The infrastructure image is not implemented yet.
+DNS versions are declared in `images/dns/tools/config.toml`; `SOURCE` records
+their origin. After changing declarations, use `make lock-dns` and review the
+config and lock diff before rebuilding. SOPS uses the Aqua backend; mise trusts
+checksum-backed provenance recorded in the lock without re-verifying SLSA at
+installation time.
+
+The common image supplies checksum-pinned mise 2026.10.0 and installs yq 4.54.1
+from `tools/common`'s committed lock. APT still supplies OS packages and npm
+installs agent CLIs under the CI image-update policy. `make check-common-lock`
+checks the application lock; `make lock-common` refreshes its platform metadata.
+
 The launcher mounts only `PROJECT` read-write at `/workspace/<project-name>`.
 Edits and deletions affect host files. Optional `MOUNTS` YAML has `readOnly` and
 `readWrite` lists of absolute directory paths; see `mounts.example.yaml`.
@@ -116,6 +188,6 @@ reference, and rollback selects a previous reference.
 State format changes may require restoring a matching volume backup. Registry
 retention and scheduled updates are not configured.
 
-Project-specific toolchains are listed in [Project tool inventory](docs/project-tools.md)
-and are not installed. The [implementation plan](docs/devcontainer-implementation-plan.md)
-covers network enforcement, derived images, and remaining validation.
+Project-specific toolchains are supplied by the derived images. The
+[Project tool inventory](docs/project-tools.md) lists requirements and validation.
+The [implementation plan](docs/devcontainer-implementation-plan.md) covers remaining isolation and validation work.
