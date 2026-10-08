@@ -77,7 +77,17 @@ make verify-dns-lock
 
 ## 検証状況
 
-DNS 派生イメージの CI ジョブへの追加はローカルで検査済み。Forgejo 上での実行・公開は未確認。
+[CI 実行 #4](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/4)で、
+コミット `dabb144` の共通・DNS イメージの AMD64 ビルド、権限・48時間の取得期限・
+daemon 状態保持・リモート終了処理の検証、DNS のダミー暗号化・復号とロック欠落／
+チェックサム改変の拒否、レジストリ公開が成功した。
+共通タグは `ci-dabb144bf7c5584c3d3c8cd6180f4bdaf5d5f779-551-1`、
+DNS タグは同じタグに `dns-` を付ける。
+公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
+共通 digest は `sha256:6870982fbc5ea017558cd3feb451d5d25220c68967edaedb86c1b33aa54f79d9`、
+DNS digest は `sha256:5631a563b7576b349979a87f66611e67e3ba840d93317dca139e60e1f91f32dd`。
+CLI は Codex 0.160.1、Claude Code 2.1.292。
+
 mise 管理に移行した共通・Go/API・Rust/LED・DNS イメージの ARM64 ビルドと
 ツール検証はローカルで実行済み。48時間の取得期限を適用した CLI は
 Codex 0.160.1、Claude Code 2.1.291 で、npm の公開日時が期限内であることを確認した。

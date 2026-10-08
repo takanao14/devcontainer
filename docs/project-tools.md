@@ -71,7 +71,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   ロック不足・不正チェックサムの拒否、プロジェクト設定による暗黙の切り替えがないことも
   確認した。実際の秘密情報の供給・復号と DNS preview/push は検証対象に含めていない。
   Forgejo workflow はロック検査と DNS イメージのビルド・検証・公開を含む。
-  この追加分の Forgejo 上での実行は未確認。
+  Forgejo の CI 実行 #4 で AMD64 のビルド・検証・公開を確認済み。
 
 - homelab は、dotfiles から取り込んだ mise 設定とロックファイルで共通 Linux CLI の
   バージョンを管理している（ADR-0049）。確認時点の設定では Terragrunt 1.1.6、
