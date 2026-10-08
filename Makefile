@@ -9,8 +9,11 @@ PROJECT ?= $(CURDIR)
 MOUNTS ?=
 NETWORK ?= none
 DRY_RUN ?= 0
+LOCK_IMAGE_REF ?= $(IMAGE):lock-tools
 
 export DOCKER IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF DNS_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
+export LOCK_IMAGE_REF
+.PHONY: build-lock-tools check-locks update-locks
 .DEFAULT_GOAL := help
 .PHONY: build-go lock-go check-go-lock verify-go check-go-project check-buf-project
 .PHONY: build-rust lock-rust check-rust-lock verify-rust verify-rust-lock check-rust-project
@@ -22,6 +25,16 @@ help: ## Show available targets
 
 build: ## Build a local development image
 	$(DOCKER) build -t "$(IMAGE_REF)" .
+
+build-lock-tools: ## Build the isolated lock generator without application installs
+	$(DOCKER) build --target mise-bootstrap -t "$(LOCK_IMAGE_REF)-bootstrap" .
+	$(DOCKER) build --build-arg "BASE_IMAGE=$(LOCK_IMAGE_REF)-bootstrap" -t "$(LOCK_IMAGE_REF)" tools/lock
+
+check-locks: build-lock-tools ## Regenerate both Linux platform locks and reject differences
+	bash scripts/lock-tools.sh check
+
+update-locks: build-lock-tools ## Regenerate tool locks for review without changing declared pins
+	bash scripts/lock-tools.sh update
 
 check-common-lock: ## Check common application declarations and platform artifacts
 	bash tests/check_tool_lock.sh tools/common

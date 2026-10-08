@@ -26,6 +26,8 @@ jobs:
           make check-dns-lock
           make check-go-lock
           make check-rust-lock
+      - name: Regenerate and compare tool locks
+        run: make check-locks LOCK_IMAGE_REF="devcontainer-images:locks-${{ forgejo.sha }}-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}"
       - name: Build and verify
         env:
           COMMIT: ${{ forgejo.sha }}

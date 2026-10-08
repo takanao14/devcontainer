@@ -1,8 +1,5 @@
-FROM ubuntu:26.04
+FROM ubuntu:26.04 AS mise-bootstrap
 
-ARG USERNAME=developer
-ARG USER_UID=1000
-ARG USER_GID=1000
 # renovate: datasource=github-releases depName=jdx/mise
 ARG MISE_VERSION=2026.10.0
 
@@ -27,6 +24,10 @@ RUN set -eu; \
     install -m 0755 /tmp/mise /usr/local/bin/mise; \
     rm /tmp/mise
 
+FROM mise-bootstrap
+ARG USERNAME=developer
+ARG USER_UID=1000
+ARG USER_GID=1000
 COPY tools/common/ /usr/local/share/devcontainer-images/common-tools/
 RUN set -eu; \
     export MISE_CONFIG_FILE=/usr/local/share/devcontainer-images/common-tools/config.toml; \

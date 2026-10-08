@@ -187,6 +187,15 @@ See [CI setup and verification](docs/ci.md) for required settings and test cover
 `renovate.json` applies the two-day cooldown to update candidates and includes
 the custom mise config paths and mise/rustup bootstrap versions. Bootstrap
 updates also require reviewing the published checksums and version checks.
+Integration with the existing `takanao/renovate` service is pending
+[PR #8](https://forgejo.home.butaco.net/takanao/renovate/pulls/8) and bot Write access.
+Update proposals require Dependency Dashboard approval and are not automatically
+merged. CI regenerates all four tool locks
+for Linux x64 and ARM64 and rejects differences before building application
+images. Run `make update-locks` to apply generated locks locally for review;
+`make check-locks` checks them without modifying the working tree. These targets
+use a disposable non-root container and `docker cp`, without shared daemon paths.
+Applying generated locks also requires rsync on the host.
 
 For AMD64, use the published reference from CI, optionally a digest, to fetch
 and run without building locally:
