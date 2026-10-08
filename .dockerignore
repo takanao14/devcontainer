@@ -1,2 +1,5 @@
 **
 !Dockerfile
+!scripts/
+scripts/*
+!scripts/codex-daemon-prepare.sh

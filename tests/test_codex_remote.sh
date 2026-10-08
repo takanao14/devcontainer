@@ -31,8 +31,13 @@ cat > "$fixture/bin/touch" <<'MOCK'
 printf 'ready\n' >> "$REMOTE_LOG"
 MOCK
 chmod +x "$fixture/bin/"*
+cat > "$fixture/bin/devcontainer-codex-prepare" <<'MOCK'
+#!/bin/bash
+[[ $REMOTE_MODE != prepare-failure ]]
+MOCK
+chmod +x "$fixture/bin/devcontainer-codex-prepare"
 export PATH="$fixture/bin:$PATH"
-for REMOTE_MODE in login-failure start-failure; do
+for REMOTE_MODE in login-failure prepare-failure start-failure; do
     export REMOTE_MODE
     : > "$REMOTE_LOG"
     if /bin/bash "$repo/scripts/codex-remote.sh" >"$fixture/output" 2>&1; then exit 1; fi

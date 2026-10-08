@@ -38,6 +38,17 @@ RUN npm install -g @openai/codex@latest @anthropic-ai/claude-code@latest \
     && { codex --version; claude --version; node --version; } \
        > /usr/local/share/devcontainer-images/versions.txt
 
+# Keep the complete native package (including helpers) owned by the image.
+RUN set -eu; \
+    manifest=$(find /usr/local/lib/node_modules/@openai/codex -name codex-package.json); \
+    test -f "$manifest"; \
+    package=$(dirname "$manifest"); \
+    for executable in bin/codex bin/codex-code-mode-host codex-path/rg codex-resources/bwrap; do \
+        test -x "$package/$executable"; \
+    done; \
+    ln -s "$package" /usr/local/share/devcontainer-images/codex-package
+COPY --chmod=0755 scripts/codex-daemon-prepare.sh /usr/local/bin/devcontainer-codex-prepare
+
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     CODEX_HOME=/home/developer/.codex \
     CLAUDE_CONFIG_DIR=/home/developer/.claude \

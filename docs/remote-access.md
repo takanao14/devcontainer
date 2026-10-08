@@ -59,14 +59,14 @@ daemon 起動後の `codex remote-control pair` は短時間有効な手動ペ�
 `CODEX_HOME/packages/app-server-daemon` にパッケージを配置でき、既存の管理パッケージが
 あればそれを再利用する。条件に合う管理 daemon は自動更新できる。
 daemon の `settings.json` にある `updater.autoUpdateEnabled` は、
-現在のイメージの `DISABLE_UPDATES` とは別の設定として検討が必要。
+イメージの `DISABLE_UPDATES` とは別の設定である。
 [0.160.1 の実装資料](https://github.com/openai/codex/blob/rust-v0.160.1/codex-rs/app-server-daemon/README.md)
 
-現在の Dockerfile は npm インストールで、`CODEX_HOME` 全体を状態ボリュームに保存する。
-管理 daemon を使用すると、実行パッケージまでボリューム側に残り、イメージ切り替え後も
-旧パッケージが再利用される可能性がある。この点は資料と構成からの推論である。
-Codex のリモート接続は確認済みだが、使用した起動方式とパッケージ構成は未記録。
-初回起動でパッケージ不足が報告された場合は、エラーに応じてインストール方式を見直す。
+Dockerfile は npm の完全なネイティブパッケージへの参照をイメージ内に用意する。
+リモート起動前に `packages/app-server-daemon/current` をその参照へ向け、
+`settings.json` の `updater.autoUpdateEnabled` を false に設定する。
+過去のパッケージ、認証・ペアリング・履歴と他の設定は保持する。
+イメージを切り替える際は環境を停止してから再起動する。
 
 0.160.1 の前面モードは一時ディレクトリ内の専用 Unix ソケットで app-server を動かす。
 一方、`remote-control pair` は管理 daemon のソケットに接続する。

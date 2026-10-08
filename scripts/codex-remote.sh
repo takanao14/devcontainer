@@ -21,6 +21,7 @@ trap 'exit 143' TERM
 trap 'exit 129' HUP
 
 codex login status
+devcontainer-codex-prepare
 # Also attempt cleanup if startup fails after partially creating the daemon.
 started=1
 codex -c 'sandbox_mode="danger-full-access"' \

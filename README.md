@@ -84,6 +84,9 @@ volume with `docker volume rm <volume-name>`; this also deletes configuration
 and history. Back up state volumes before CLI updates if rollback is needed.
 
 CLIs are installed at build time; in-container Claude updates are disabled.
+Remote startup selects the image-owned Codex daemon package and disables its
+updater while retaining authentication, pairing, history, and other settings.
+Stop the remote environment before switching images, then start it again.
 `make rebuild` refreshes the base and CLIs without cache for local development.
 `make verify` checks CLI versions and user permissions without credentials.
 Resolved versions are recorded in `/usr/local/share/devcontainer-images/versions.txt`.
