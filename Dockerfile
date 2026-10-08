@@ -3,6 +3,8 @@ FROM ubuntu:26.04
 ARG USERNAME=developer
 ARG USER_UID=1000
 ARG USER_GID=1000
+# renovate: datasource=github-releases depName=jdx/mise
+ARG MISE_VERSION=2026.10.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -20,7 +22,7 @@ RUN set -eu; \
         arm64) asset=arm64; checksum=4b8cacffac83e8493fc5d1eef25f6365edba73ccbed5a1f3987b7cb3f5079656 ;; \
         *) echo "Unsupported mise architecture: $arch" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL --retry 3 "https://github.com/jdx/mise/releases/download/v2026.10.0/mise-v2026.10.0-linux-$asset" -o /tmp/mise; \
+    curl -fsSL --retry 3 "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-$asset" -o /tmp/mise; \
     printf '%s  /tmp/mise\n' "$checksum" | sha256sum -c -; \
     install -m 0755 /tmp/mise /usr/local/bin/mise; \
     rm /tmp/mise
@@ -41,10 +43,14 @@ RUN if id ubuntu >/dev/null 2>&1; then userdel -r ubuntu; fi \
     && printf '%s ALL=(ALL) PASSWD:ALL\n' "${USERNAME}" > "/etc/sudoers.d/${USERNAME}" \
     && chmod 0440 "/etc/sudoers.d/${USERNAME}"
 
-RUN npm install -g @openai/codex@latest @anthropic-ai/claude-code@latest \
-    && npm cache clean --force \
-    && mkdir -p /usr/local/share/devcontainer-images \
-    && { codex --version; claude --version; node --version; } \
+RUN set -eu; \
+    build_epoch=$(date -u +%s); \
+    cutoff=$(date -u -d "@$((build_epoch - 172800))" +%Y-%m-%dT%H:%M:%SZ); \
+    npm install -g --before="$cutoff" @openai/codex@latest @anthropic-ai/claude-code@latest; \
+    npm cache clean --force; \
+    mkdir -p /usr/local/share/devcontainer-images; \
+    printf '%s\n' "$cutoff" > /usr/local/share/devcontainer-images/npm-before.txt; \
+    { codex --version; claude --version; node --version; } \
        > /usr/local/share/devcontainer-images/versions.txt
 
 # Keep the complete native package (including helpers) owned by the image.
@@ -59,6 +65,7 @@ RUN set -eu; \
 COPY --chmod=0755 scripts/codex-daemon-prepare.sh /usr/local/bin/devcontainer-codex-prepare
 
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
+    MISE_MINIMUM_RELEASE_AGE=2d \
     CODEX_HOME=/home/developer/.codex \
     CLAUDE_CONFIG_DIR=/home/developer/.claude \
     DISABLE_UPDATES=1 DISABLE_AUTOUPDATER=1

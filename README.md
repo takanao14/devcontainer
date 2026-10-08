@@ -98,6 +98,13 @@ The common image supplies checksum-pinned mise 2026.10.0 and installs yq 4.54.1
 from `tools/common`'s committed lock. APT still supplies OS packages and npm
 installs agent CLIs under the CI image-update policy. `make check-common-lock`
 checks the application lock; `make lock-common` refreshes its platform metadata.
+New application releases have a two-day cooldown. Agent CLI installation uses
+npm's `--before` cutoff for direct and transitive registry dependencies; the
+cutoff is recorded in `npm-before.txt` alongside the resolved versions.
+mise uses `minimum_release_age = "2d"` when selecting new versions or Python
+dependencies. Existing reviewed pins and lock graphs remain reproducible;
+changing an exact pin requires checking its release date. APT updates follow
+the distribution's policy.
 
 The launcher mounts only `PROJECT` read-write at `/workspace/<project-name>`.
 Edits and deletions affect host files. Optional `MOUNTS` YAML has `readOnly` and
@@ -177,6 +184,9 @@ access. CI runs #1 and #3 verified AMD64 builds, tests, and registry publication
 run #3 includes yq, ShellCheck, and remote lifecycle validation.
 The initial workflow builds the runner's native architecture only.
 See [CI setup and verification](docs/ci.md) for required settings and test coverage.
+`renovate.json` applies the two-day cooldown to update candidates and includes
+the custom mise config paths and mise/rustup bootstrap versions. Bootstrap
+updates also require reviewing the published checksums and version checks.
 
 For AMD64, use the published reference from CI, optionally a digest, to fetch
 and run without building locally:

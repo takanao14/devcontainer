@@ -3,6 +3,8 @@ FROM ${BASE_IMAGE} AS mise-bootstrap
 USER root
 
 FROM mise-bootstrap
+# renovate: datasource=github-releases depName=rust-lang/rustup
+ARG RUSTUP_VERSION=1.29.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         pkg-config protobuf-compiler libasound2-dev \
@@ -20,7 +22,7 @@ RUN set -eu; \
         arm64) target=aarch64-unknown-linux-gnu; checksum=15f6e4ce9f583b929c996c91562bad6d4454f3281de858b02cdfdef615fac433 ;; \
         *) echo "Unsupported Rust architecture: $arch" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL --retry 3 "https://static.rust-lang.org/rustup/archive/1.29.1/$target/rustup-init" -o /tmp/rustup-init; \
+    curl -fsSL --retry 3 "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/$target/rustup-init" -o /tmp/rustup-init; \
     printf '%s  /tmp/rustup-init\n' "$checksum" | sha256sum -c -; \
     chmod 0755 /tmp/rustup-init; \
     /tmp/rustup-init -y --no-modify-path --profile minimal --default-toolchain none; \

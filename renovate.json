@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "minimumReleaseAge": "2 days",
+  "internalChecksFilter": "strict",
+  "minimumReleaseAgeBehaviour": "timestamp-required",
+  "mise": {
+    "managerFilePatterns": ["/^(tools/common|images/(go|rust|dns)/tools)/config\\.toml$/"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^(Dockerfile|images/rust/Dockerfile)$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\nARG \\w+=(?<currentValue>[^\\s]+)"
+      ],
+      "versioningTemplate": "semver-coerced"
+    }
+  ]
+}

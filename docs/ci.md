@@ -11,6 +11,14 @@ main への push、pull request、手動実行でテストとイメージのビ�
 共通イメージのタグは `ci-<commit>-<run>-<attempt>`、DNS 派生イメージは
 `dns-ci-<commit>-<run>-<attempt>` で、既存タグへの上書きを前提としない。
 CLI バージョンはイメージ内の `versions.txt` と検証ログ、公開先と digest は公開ログに残る。
+CLI の取得期限はビルド時点の48時間前で、イメージ内の `npm-before.txt` に記録する。
+`verify` は npm の選択処理で、期限直前・期限ちょうど・期限後のバージョンと
+若い固定バージョンの拒否をオフラインで確認する。
+
+`renovate.json` は `minimumReleaseAge: "2 days"` と厳密な候補フィルターを指定する。
+公開日時がない候補は待機対象とする。用途別 mise 設定と固定した mise/rustup のバージョンを
+検出するが、ブートストラップのチェックサム・検証用の固定値や用途別ロックの更新はレビューを必要とする。
+設定の追加だけでは Renovate の実行基盤は起動しない。
 
 ## Runner と公開設定
 
@@ -71,8 +79,10 @@ make verify-dns-lock
 
 DNS 派生イメージの CI ジョブへの追加はローカルで検査済み。Forgejo 上での実行・公開は未確認。
 mise 管理に移行した共通・Go/API・Rust/LED・DNS イメージの ARM64 ビルドと
-ツール検証はローカルで実行済み。再ビルド時の CLI は Codex 0.161.0、Claude Code 2.1.293。
+ツール検証はローカルで実行済み。48時間の取得期限を適用した CLI は
+Codex 0.160.1、Claude Code 2.1.291 で、npm の公開日時が期限内であることを確認した。
 この共通イメージで daemon の状態保持とリモート終了処理も確認した。
+Renovate 設定は公式イメージ `renovate/renovate:44.139.0` の厳密な設定検査に成功した。
 ロックの更新は `make lock-dns` と差分レビューで行う。CI はコミット済みロックを検査し、
 ロックの自動生成・更新はまだ行わない。
 

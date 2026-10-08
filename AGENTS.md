@@ -34,6 +34,8 @@
 - Never include credentials or personal configuration in images or print secrets.
 - Pin downloaded tools and verify published checksums when available. Agent CLIs
   follow the plan's CI image-update policy instead of fixed version pins.
+- Select new application releases only after 48 hours; preserve reviewed pins
+  and dependency locks on rebuilds.
 
 ## Validation
 

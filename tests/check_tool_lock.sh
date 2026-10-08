@@ -7,6 +7,7 @@ yq -p toml -o json '.' "$tools/config.toml" > "$fixture/config.json"
 yq -p toml -o json '.' "$tools/mise.lock" > "$fixture/lock.json"
 jq -en --slurpfile config "$fixture/config.json" --slurpfile lock "$fixture/lock.json" '
   $config[0].tools as $tools | $lock[0].tools as $locked |
+  $config[0].settings.minimum_release_age == "2d" and
   ($tools | keys) == ($locked | keys) and
   all($tools | to_entries[];
     . as $tool | $locked[$tool.key] as $entries |

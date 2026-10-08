@@ -1,6 +1,7 @@
 [settings]
 experimental = true
 lockfile = true
+minimum_release_age = "2d"
 
 [tools]
 "go" = "1.27.1"
