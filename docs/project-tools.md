@@ -11,7 +11,7 @@ tar、zip/unzip、sudo、基本的なプロセス・ネットワークユーテ�
 これらは Dockerfile で提供している。エージェント実行用に Codex CLI、Claude Code、
 Node.js と npm も共通イメージに含む。
 yq は 4.54.1 に固定し、AMD64 / ARM64 の配布バイナリーを公開 SHA-256 で検証する。
-固定した mise 2026.10.0 と `tools/common` の設定・ロックで導入する。
+固定した mise 2026.10.3 と `tools/common` の設定・ロックで導入する。
 派生イメージは共通イメージの mise を使用する。
 ShellCheck は Ubuntu のパッケージを使用する。
 Ubuntu の Node.js / npm パッケージの依存関係には Python 3 が含まれる。
@@ -32,7 +32,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
 
 - 最初の派生イメージは `images/go/Dockerfile` とし、Go 1.27.1 と Buf 1.73.0 を提供する。
   AMD64 / ARM64 の公式アーカイブを SHA-256 で検証し、`GOTOOLCHAIN=local` とする。
-  mise 2026.10.0 と `images/go/tools` の設定・ロックを使用する。
+  mise 2026.10.3 と `images/go/tools` の設定・ロックを使用する。
   実行時はイメージ所有の固定パスを使用し、プロジェクトの mise 設定では切り替えない。
   ローカル ARM64 で `dhcp-lease-observer`（`92ab867`）の通常テスト・競合検出テスト・
   `go vet`・ビルドを確認した。依存取得後はネットワークなしで、読み取り専用の
@@ -47,7 +47,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
   protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.4、
   ansible-lint 26.9.0 を提供する。rustup 1.29.1 のインストーラーは公式 SHA-256 で検証し、
-  mise 2026.10.0 と `images/rust/tools` の設定で Rust のバージョン・プロファイル・
+  mise 2026.10.3 と `images/rust/tools` の設定で Rust のバージョン・プロファイル・
   コンポーネントを指定する。Ansible の推移的依存は uv.lock のハッシュ付きグラフを使用し、
   ansible-lint の環境も ansible-core 2.21.4 を使用する。ツールチェーンはイメージ所有で、
   Cargo キャッシュは非 root ユーザーが書き込める。実行時の自動インストールと
@@ -61,7 +61,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   導入時はその SHA-256 を検証する。
 
 - DNS イメージは `images/dns/Dockerfile` で dnscontrol 5.3.0、SOPS 3.13.3、
-  age 1.3.2、direnv 2.37.1 を提供する。mise 2026.10.0 と用途別の設定・ロックで導入し、
+  age 1.3.2、direnv 2.37.1 を提供する。mise 2026.10.3 と用途別の設定・ロックで導入し、
   各配布物は公式 SHA-256 で検証する。取り込み元は `images/dns/tools/SOURCE` に記録する。
   SOPS は Aqua バックエンドを使用する。mise 2026.10.0 はチェックサム付きロックの
   来歴情報を信頼し、導入時の SLSA 再検証は行わない。署名者情報の欠落は解消していない。
