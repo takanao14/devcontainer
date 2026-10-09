@@ -8,8 +8,8 @@ main への push、pull request、手動実行でテストとイメージのビ�
 
 公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
 レジストリのホスト名は workflow の `CONTAINER_REGISTRY` に定義する。
-共通イメージのタグは `ci-<commit>-<run>-<attempt>`、DNS 派生イメージは
-`dns-ci-<commit>-<run>-<attempt>` で、既存タグへの上書きを前提としない。
+共通イメージのタグは `ci-<commit>-<run>-<attempt>`、派生イメージは同じタグに
+`dns-`・`go-`・`rust-` を付け、既存タグへの上書きを前提としない。
 CLI バージョンはイメージ内の `versions.txt` と検証ログ、公開先と digest は公開ログに残る。
 CLI の取得期限はビルド時点の48時間前で、イメージ内の `npm-before.txt` に記録する。
 `verify` は npm の選択処理で、期限直前・期限ちょうど・期限後のバージョンと
@@ -74,18 +74,27 @@ make check-rust-lock
 make build-dns
 make verify-dns
 make verify-dns-lock
+make build-go
+make verify-go
+make build-rust
+make verify-rust
+make verify-rust-lock
 ```
 
 - `test` はランチャーの設定検証を確認する。
 - `check-dns-lock` は宣言とロックの対応、および AMD64 / ARM64 両方の URL・SHA-256 を確認する。
   Go/API の宣言・ロックも `check-go-lock` で同じ条件を確認する。
   共通ツールは `check-common-lock`、Rust のコンポーネント指定と Python 依存グラフの
-  ファイル存在は `check-rust-lock` で確認する。Go/API と Rust のイメージビルド・実行検証は
-  引き続きローカルで行う。
+  ファイル存在は `check-rust-lock` で確認する。
 - DNS 派生イメージは同じ実行で検証した共通イメージからビルドする。
   `verify-dns` は非 root 実行、バージョン、ダミーの暗号化・復号、direnv を確認する。
   `verify-dns-lock` はロック欠落とチェックサム改変の拒否を確認するため、テスト用アーティファクトを取得する。
-  両イメージの検証成功後に公開を開始する。公開途中の失敗では、先に公開したタグが残る場合がある。
+- Go/API と Rust/LED も同じ実行で検証した共通イメージからビルドする。
+  `verify-go` は固定した Go・Buf、非 root 実行、自動ツールチェーン取得の無効化を確認する。
+  `verify-rust` は Rust コンポーネント、ネイティブライブラリ、Ansible、書き込み権限を確認する。
+  `verify-rust-lock` は Python 依存グラフのチェックサム改変をオフラインで拒否することを確認する。
+  4イメージすべての検証成功後に公開を開始し、派生タグには `dns-`・`go-`・`rust-` を付ける。
+  公開途中の失敗では、先に公開したタグが残る場合がある。
 - `verify` は非 root 実行、パスワードなし sudo の拒否、CLI のバージョン記録との一致を確認する。
 - `smoke-daemon` は一時的な名前付きボリュームを使い、読み取り専用アクセス、
   コンテナ再作成後の状態保持、CLI の起動オプションを確認する。
@@ -99,6 +108,11 @@ make verify-dns-lock
 どちらの結合テストも認証情報を使用せず、終了時にテスト用ボリュームを削除する。
 
 ## 検証状況
+
+Go/API・Rust/LED の CI ビルド・検証・公開を workflow に追加した。
+追加した検証ターゲットはローカル ARM64 でビルド後に成功し、ランチャーテスト、
+宣言・ロック検査、workflow のシェル構文も確認した。
+この追加分の AMD64 CI 実行と公開は未確認。
 
 [CI 実行 #4](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/4)で、
 コミット `dabb144` の共通・DNS イメージの AMD64 ビルド、権限・48時間の取得期限・
