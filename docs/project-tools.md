@@ -45,7 +45,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Go/API の両アーキテクチャ向けロック検査は Forgejo workflow に含む。
 
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
-  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.22、ansible-core 2.21.4、
+  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.4、
   ansible-lint 26.9.0 を提供する。rustup 1.29.1 のインストーラーは公式 SHA-256 で検証し、
   mise 2026.10.0 と `images/rust/tools` の設定で Rust のバージョン・プロファイル・
   コンポーネントを指定する。Ansible の推移的依存は uv.lock のハッシュ付きグラフを使用し、
@@ -57,8 +57,8 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   mise・uv 管理への移行後も同じ検証と、依存グラフのハッシュ改変拒否を確認した。
   Raspberry Pi 構成のビルド、画面・音声・LED の実動作は未確認。
   インフラ用イメージは未実装。
-  uv のロック生成時の来歴検証は失敗したため、取り込み元のチェックサム付き記録を維持する。
-  導入時はその SHA-256 を検証する。来歴の再検証が成功したとは扱わない。
+  uv のロックは GitHub の attestation 検証付きで生成し、チェックサムは公式の .sha256 と一致する。
+  導入時はその SHA-256 を検証する。
 
 - DNS イメージは `images/dns/Dockerfile` で dnscontrol 5.3.0、SOPS 3.13.3、
   age 1.3.2、direnv 2.37.1 を提供する。mise 2026.10.0 と用途別の設定・ロックで導入し、
