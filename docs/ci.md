@@ -111,6 +111,12 @@ Renovate 設定は公式イメージ `renovate/renovate:44.139.0` の厳密な�
 `make check-locks` でロックの再生成・差分検査を行う。
 ローカル ARM64 で再生成の差分検出、`update-locks` による正規化、再実行時の差分なしを
 確認した。ステージ分割後の共通イメージのビルド・検証も成功した。
+[CI 実行 #5](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/5) で、
+コミット `a89ac4e` の AMD64 runner における4用途の両 Linux プラットフォームの
+ロック再生成・差分なし、共通・DNS イメージのビルド・検証・公開を確認した。
+公開タグは `ci-a89ac4ecc856bf61f60598e2b8ca6a675e97cb39-552-1` とその `dns-` 接頭辞付き。
+共通 digest は `sha256:24211521b2dd3f32d35c69aed6e793ca0889382c9a275f8a446c3b6d5da111a8`、
+DNS digest は `sha256:18b2c43bf31d80e5809264b78483d3ab26881131c6b3ae9e0c6196ae36051b54`。
 
 [CI 実行 #1](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/1)で、
 amd64 ビルド、ランチャー検証、権限・永続化テスト、レジストリへの公開が成功した。
