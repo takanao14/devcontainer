@@ -18,11 +18,16 @@ CLI の取得期限はビルド時点の48時間前で、イメージ内の `npm
 `renovate.json` は `minimumReleaseAge: "2 days"` と厳密な候補フィルターを指定する。
 公開日時がない候補は待機対象とする。用途別 mise 設定と固定した mise/rustup のバージョンを
 検出するが、ブートストラップのチェックサム・検証用の固定値や用途別ロックの更新はレビューを必要とする。
-実行基盤は既存の `takanao/renovate` を使用する。対象追加は
-[PR #8](https://forgejo.home.butaco.net/takanao/renovate/pulls/8) で提出済みで、マージ待ち。
+実行基盤は既存の `takanao/renovate` を使用する。対象追加の
+[PR #8](https://forgejo.home.butaco.net/takanao/renovate/pulls/8) はマージ済み。
 対象は同リポジトリの
 `config.js` の `repositories` に登録する。更新 PR は Dependency Dashboard の
 承認後に作成し、自動マージは無効とする。Bot にはこのリポジトリの Write 権限が必要。
+Bot の Dashboard 作成を確認済み。既存 workflow へ GitHub の fine-grained token を
+Actions Secret 経由で渡した実行後、トークン不足・API レート制限の警告は解消した。
+`images/rust/tools/.mise/locks/**` は生成物のため依存検出から除外し、更新対象を
+用途別 `config.toml` に集約する。checkout のタグ検索警告は残っており、Renovate runner
+からの配布元 API への通信と取得ログによる切り分けが必要。
 
 `make check-locks` は固定した mise と uv を使い、4用途の Linux x64 / ARM64 ロックを
 一時コンテナ内で再生成して差分を検査する。宣言したバージョンは変更しない。

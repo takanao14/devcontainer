@@ -6,6 +6,17 @@
   "minimumReleaseAge": "2 days",
   "internalChecksFilter": "strict",
   "minimumReleaseAgeBehaviour": "timestamp-required",
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "images/rust/tools/.mise/locks/**"
+  ],
   "mise": {
     "managerFilePatterns": ["/^(tools/common|images/(go|rust|dns)/tools)/config\\.toml$/"]
   },
