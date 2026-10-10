@@ -161,8 +161,8 @@ smoke-daemon: ## Check a remote Docker daemon without runner bind mounts
 smoke-remote: ## Check remote lifecycle in Docker without credentials
 	bash tests/smoke_codex_remote.sh
 
-.PHONY: check check-shell check-base verify-local update-local
-check: test check-common-lock check-dns-lock check-go-lock check-rust-lock check-shell ## Run CI checks without Docker
+.PHONY: check-bootstrap check check-shell check-base verify-local update-local
+check: test check-bootstrap check-common-lock check-dns-lock check-go-lock check-rust-lock check-shell ## Run CI checks without Docker
 	node tests/test_npm_release_age.cjs
 	bash tests/test_local_update.sh
 	bash tests/test_static_ci.sh
@@ -177,3 +177,6 @@ verify-local: verify smoke smoke-daemon smoke-remote ## Verify the common image 
 
 update-local: ## Build and verify a unique candidate (KIND=common|dns|go|rust)
 	@bash scripts/local-update.sh "$(or $(KIND),common)" "$(or $(UPDATE_MODE),build)"
+
+check-bootstrap: ## Check reviewed mise bootstrap version and checksums
+	bash tests/check_bootstrap.sh
