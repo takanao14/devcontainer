@@ -51,7 +51,7 @@ Go/API declarations and their origin are in `images/go/tools`. Use `make lock-go
 after changing versions and review the lock diff before rebuilding.
 
 The Rust/LED image adds Rust 1.99.0, rustfmt, Clippy, protoc, ALSA and X11/Wayland
-development libraries, Python, ansible-core 2.21.4, and ansible-lint 26.9.0.
+development libraries, Python, ansible-core 2.21.5, and ansible-lint 26.9.0.
 Its toolchain is owned by the image; Cargo's cache remains writable by the user.
 mise declares Rust's profile and components and replays Ansible's committed
 Python dependency graphs with uv 0.12.23. rustup 1.29.1 remains checksum-pinned.
