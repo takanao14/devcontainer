@@ -16,6 +16,6 @@ set -euo pipefail
       test "$(rustc --version | cut -d " " -f 2)" = 1.99.0
       test "$(cargo --version | cut -d " " -f 2)" = 1.99.0
       lint_python=$(dirname "$(readlink -f "$(command -v ansible-lint)")")/python
-      "$lint_python" -c "import ansible.release; assert ansible.release.__version__ == \"2.21.4\""
+      "$lint_python" -c "import ansible.release; assert ansible.release.__version__ == \"2.21.5\""
     '
 printf 'Rust image paths and Ansible dependency constraint passed offline\n'

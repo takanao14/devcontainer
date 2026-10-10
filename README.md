@@ -28,7 +28,7 @@ container; it does not attach to the Make-managed remote environment or mount
 the launcher's agent state volumes.
 
 The Go/API image adds Go 1.27.1 and Buf 1.73.0 with verified release checksums.
-Pinned mise 2026.10.0 installs them from committed Linux AMD64 / ARM64 locks.
+Pinned mise 2026.10.3 installs them from committed Linux AMD64 / ARM64 locks.
 Runtime commands use image-owned paths rather than project-selected mise shims.
 Toolchain downloads at runtime are disabled (`GOTOOLCHAIN=local`).
 
@@ -51,7 +51,7 @@ Go/API declarations and their origin are in `images/go/tools`. Use `make lock-go
 after changing versions and review the lock diff before rebuilding.
 
 The Rust/LED image adds Rust 1.99.0, rustfmt, Clippy, protoc, ALSA and X11/Wayland
-development libraries, Python, ansible-core 2.21.4, and ansible-lint 26.9.0.
+development libraries, Python, ansible-core 2.21.5, and ansible-lint 26.9.0.
 Its toolchain is owned by the image; Cargo's cache remains writable by the user.
 mise declares Rust's profile and components and replays Ansible's committed
 Python dependency graphs with uv 0.12.23. rustup 1.29.1 remains checksum-pinned.
@@ -72,7 +72,7 @@ It does not connect display, audio, or LED devices or deploy services.
 Declarations and dependency sidecars are in `images/rust/tools`. Use `make lock-rust`
 with a built Rust image and review the config, lock, and sidecar changes together.
 The DNS image installs dnscontrol 5.3.0, SOPS 3.13.3, age 1.3.2, and direnv 2.37.1
-through pinned mise 2026.10.0 and the committed platform lockfile. Commands use
+through pinned mise 2026.10.3 and the committed platform lockfile. Commands use
 direct image-owned paths, so project mise settings do not switch these tools.
 
 ```sh
@@ -94,7 +94,7 @@ config and lock diff before rebuilding. SOPS uses the Aqua backend; mise trusts
 checksum-backed provenance recorded in the lock without re-verifying SLSA at
 installation time.
 
-The common image supplies checksum-pinned mise 2026.10.0 and installs yq 4.54.1
+The common image supplies checksum-pinned mise 2026.10.3 and installs yq 4.54.1
 from `tools/common`'s committed lock. APT still supplies OS packages and npm
 installs agent CLIs under the CI image-update policy. `make check-common-lock`
 checks the application lock; `make lock-common` refreshes its platform metadata.
