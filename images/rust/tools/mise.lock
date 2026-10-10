@@ -20,19 +20,19 @@ url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/608232628"
 provenance = "github-attestations"
 
 [[tools."pipx:ansible-core"]]
-version = "2.21.4"
+version = "2.21.5"
 backend = "pipx:ansible-core"
-specifiers = ["2.21.4"]
-uv = { path = ".mise/locks/pipx-ansible-core/2.21.4", digest = "sha256:a27cc61d7001bba32cedd4aa2028d3a0978f95d266092f5c38a944201ea1e2be" }
+specifiers = ["2.21.5"]
+uv = { path = ".mise/locks/pipx-ansible-core/2.21.5", digest = "sha256:02e3c7526b80c3eedc42e3732bc64b66f4c1914ac5eb25a664cdfaec6d4dfec5" }
 
 [[tools."pipx:ansible-lint"]]
 version = "26.9.0"
 backend = "pipx:ansible-lint"
 specifiers = ["26.9.0"]
-uv = { path = ".mise/locks/pipx-ansible-lint/26.9.0~cf2726db", digest = "sha256:8c033e3f1a967a87bd3aebffeb88dab7755e16a4f9c1fb6f4fb4ed21f8d33d1b" }
+uv = { path = ".mise/locks/pipx-ansible-lint/26.9.0~3449a159", digest = "sha256:e2d209963e1a17d6fd6a7c0f197bc11f65435ca0ff2cffb0ee7ca85cd118f55c" }
 
 [tools."pipx:ansible-lint".options]
-with = '["ansible-core==2.21.4"]'
+with = '["ansible-core==2.21.5"]'
 
 [[tools.rust]]
 version = "1.99.0"

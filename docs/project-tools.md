@@ -45,11 +45,11 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Go/API の両アーキテクチャ向けロック検査は Forgejo workflow に含む。
 
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
-  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.4、
+  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.5、
   ansible-lint 26.9.0 を提供する。rustup 1.29.1 のインストーラーは公式 SHA-256 で検証し、
   mise 2026.10.3 と `images/rust/tools` の設定で Rust のバージョン・プロファイル・
   コンポーネントを指定する。Ansible の推移的依存は uv.lock のハッシュ付きグラフを使用し、
-  ansible-lint の環境も ansible-core 2.21.4 を使用する。ツールチェーンはイメージ所有で、
+  ansible-lint の環境も ansible-core 2.21.5 を使用する。ツールチェーンはイメージ所有で、
   Cargo キャッシュは非 root ユーザーが書き込める。実行時の自動インストールと
   rustup の自動更新は無効。2026-10-08 にローカル ARM64 で `led-service2`（`90d087e`）の
   エミュレーター構成のフォーマット・Clippy・ビルド・Rust テスト32件、Python テスト8件、
