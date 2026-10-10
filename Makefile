@@ -11,7 +11,7 @@ NETWORK ?= none
 DRY_RUN ?= 0
 LOCK_IMAGE_REF ?= $(IMAGE):lock-tools
 
-export DOCKER IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF DNS_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
+export DOCKER IMAGE IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF DNS_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
 export LOCK_IMAGE_REF
 .PHONY: build-lock-tools check-locks update-locks
 .DEFAULT_GOAL := help
@@ -47,7 +47,7 @@ lock-common: ## Refresh common tool locks with the built image's pinned mise
 rebuild: ## Refresh the base and CLIs without build cache
 	$(DOCKER) build --pull --no-cache -t "$(IMAGE_REF)" .
 
-build-go: build check-go-lock ## Build the Go development image on the common image
+build-go: check-base check-go-lock ## Build the Go development image on the common image
 	$(DOCKER) build --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(GO_IMAGE_REF)" images/go
 
 verify-go: ## Check the Go toolchain and inherited agent environment
@@ -71,7 +71,7 @@ check-go-project: ## Check a Go PROJECT in a disposable copy, offline after depe
 check-buf-project: ## Check a Buf PROJECT in a disposable copy using its Make targets
 	bash tests/check_buf_project.sh
 
-build-rust: build check-rust-lock ## Build the Rust/LED development image on the common image
+build-rust: check-base check-rust-lock ## Build the Rust/LED development image on the common image
 	$(DOCKER) build --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(RUST_IMAGE_REF)" images/rust
 
 verify-rust: ## Check Rust, native libraries, and Ansible as non-root
@@ -93,7 +93,7 @@ verify-rust-lock: check-rust-lock ## Check corrupted Python dependency graph rej
 check-rust-project: ## Check led-service2 in a disposable copy, offline after fetching crates
 	bash tests/check_rust_project.sh
 
-build-dns: build ## Build the DNS development image on the common image
+build-dns: check-base check-dns-lock ## Build the DNS development image on the common image
 	$(DOCKER) build --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(DNS_IMAGE_REF)" images/dns
 
 lock-dns: build ## Refresh both DNS lock platforms with the pinned mise
@@ -115,7 +115,7 @@ verify-dns-lock: check-dns-lock ## Check missing lock and bad checksum rejection
 check-dns-project: ## Check homelab-private DNS configuration offline without credentials
 	bash tests/check_dns_project.sh
 
-pull: ## Fetch the selected published image
+pull: ## Fetch an optional externally distributed image
 	$(DOCKER) pull "$(IMAGE_REF)"
 
 run: shell ## Alias for shell
@@ -150,7 +150,7 @@ verify: ## Check the image without credentials
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" bash -ec 'test "$$(id -u)" != 0; if sudo -n true 2>/dev/null; then exit 1; fi; codex --version; claude --version; diff /usr/local/share/devcontainer-images/versions.txt <(codex --version; claude --version; node --version)'
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" bash -ec 'yq --version; shellcheck --version; test "$$(printf "value: true\n" | yq -o=json "." | jq -r .value)" = true; printf "#!/bin/sh\nexit 0\n" | shellcheck -s sh -'
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" bash -ec 'mise --version | grep -q "^2026.10.4"; test ! -w /opt/dev-tools/mise; test "$$(yq -p toml -r ".tools.\"aqua:mikefarah/yq\"" /usr/local/share/devcontainer-images/common-tools/config.toml)" = 4.54.1'
-	$(DOCKER) run --rm -i --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" node < tests/test_npm_release_age.cjs
+	$(DOCKER) run --rm -i --network none --cap-drop ALL --security-opt no-new-privileges "$(IMAGE_REF)" node - --image-policy < tests/test_npm_release_age.cjs
 
 smoke: ## Check mounts and state persistence with temporary fixtures
 	bash tests/smoke_container.sh
@@ -160,3 +160,20 @@ smoke-daemon: ## Check a remote Docker daemon without runner bind mounts
 
 smoke-remote: ## Check remote lifecycle in Docker without credentials
 	bash tests/smoke_codex_remote.sh
+
+.PHONY: check check-shell check-base verify-local update-local
+check: test check-common-lock check-dns-lock check-go-lock check-rust-lock check-shell ## Run CI checks without Docker
+	node tests/test_npm_release_age.cjs
+	bash tests/test_local_update.sh
+	bash tests/test_static_ci.sh
+
+check-shell: ## Check shell syntax and ShellCheck diagnostics
+	bash scripts/check-shell.sh
+
+check-base: ## Require the explicitly selected local base image
+	$(DOCKER) image inspect "$(IMAGE_REF)" >/dev/null
+
+verify-local: verify smoke smoke-daemon smoke-remote ## Verify the common image and local lifecycle
+
+update-local: ## Build and verify a unique candidate (KIND=common|dns|go|rust)
+	@bash scripts/local-update.sh "$(or $(KIND),common)" "$(or $(UPDATE_MODE),build)"
