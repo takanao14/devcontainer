@@ -26,8 +26,12 @@ CLI の取得期限はビルド時点の48時間前で、イメージ内の `npm
 Bot の Dashboard 作成を確認済み。既存 workflow へ GitHub の fine-grained token を
 Actions Secret 経由で渡した実行後、トークン不足・API レート制限の警告は解消した。
 `images/rust/tools/.mise/locks/**` は生成物のため依存検出から除外し、更新対象を
-用途別 `config.toml` に集約する。checkout のタグ検索警告は残っており、Renovate runner
-からの配布元 API への通信と取得ログによる切り分けが必要。
+用途別 `config.toml` に集約する。
+Renovate runner はインターネットへの IPv6 経路を持たないため、手動・定期実行で
+`--dns-result-order=ipv4first --no-network-family-autoselection` を使用する。
+通常設定で失敗した checkout タグ取得は、この設定で成功し、Dashboard の警告も解消した。
+定期実行への適用は既存 Renovate の
+[PR #13](https://forgejo.home.butaco.net/takanao/renovate/pulls/13) でマージ済み。
 
 `make check-locks` は固定した mise と uv を使い、4用途の Linux x64 / ARM64 ロックを
 一時コンテナ内で再生成して差分を検査する。宣言したバージョンは変更しない。
