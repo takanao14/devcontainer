@@ -8,6 +8,7 @@ runner のラベルは `ubuntu-24.04`。Bash、Make、Git、jq、Mike Farah yq v
 ShellCheck、Node.js と npm が必要で、Docker daemon とレジストリ認証は不要。
 
 `check` はランチャーとリモート操作のモックテスト、候補更新の失敗処理、
+mise ブートストラップのバージョン・チェックサム・実行時検証値の一致、
 共通・DNS・Go・Rust の宣言と保存済みロックの整合性、シェル構文・ShellCheck、
 npm の48時間の選択期限を確認する。workflow の YAML と埋め込まれたシェルも検査する。
 保存済みロックの検査には Linux x64 / ARM64 の URL・チェックサムと
