@@ -1,7 +1,7 @@
 FROM ubuntu:26.04 AS mise-bootstrap
 
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=2026.10.3
+ARG MISE_VERSION=2026.10.4
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
