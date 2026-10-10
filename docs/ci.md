@@ -60,6 +60,28 @@ Ubuntu・npm・GitHub Releases・checkout アクションの取得先への通�
 Docker の認証設定はジョブ専用の一時ディレクトリに保存する。処理終了時にそのディレクトリを削除する。
 認証やタグ付けが失敗した場合、後続の公開処理は実行しない。
 
+## Runner の容量管理
+
+実行終了時は成功・失敗にかかわらず、その実行の共通・DNS・Go・Rust・ロック生成用の
+ローカルタグを削除する。公開先のタグを削除するのではなく、runner 内のタグだけを削除する。
+使用中のイメージは強制削除しない。runner の強制終了で後処理が動かなかった場合はタグが残る。
+ビルドキャッシュはイメージとレイヤーを共有するため、使用量を単純に加算しない。
+
+共有 Docker daemon のキャッシュは runner 管理側の GC が保持量を管理する。
+`docker` driver 用の設定例は `tools/ci/docker-gc.json` とし、保持量の目安を10GBとする。
+これは GC の削減基準であり、ビルド中の容量を保証する上限ではない。
+この workflow から daemon 全体への `prune` は実行しない。
+[Docker の GC 設定](https://docs.docker.com/build/cache/garbage-collection/)に従い、
+runner ホストで次の手順を実施する。
+
+1. CI 実行を止め、既存の `/etc/docker/daemon.json` をバックアップする。
+2. 既存設定の `builder.gc` に設定例を統合する。他の設定や既存のカスタム `policy` は確認して維持する。
+3. `sudo dockerd --validate --config-file /etc/docker/daemon.json` で構文・設定を検査する。
+4. Docker を再起動し、`docker system df`・`docker buildx du` と `df -h` で容量を確認する。
+
+既存の CI タグは自動削除の対象外なので、初回は不要なタグを整理してから CI を再開する。
+runner 上の GC 設定変更・Docker 再起動は、このリポジトリの変更では実施しない。
+
 ## 検証
 
 ```sh

@@ -22,6 +22,7 @@ jobs:
           yq --version
           jq --version
           make test
+          bash tests/test_ci_cleanup.sh
           make check-common-lock
           make check-dns-lock
           make check-go-lock
@@ -77,3 +78,11 @@ jobs:
             printf 'Published %s\n' "$target"
             docker image inspect "$target" --format '{{json .RepoDigests}}'
           done
+      - name: Remove this run's local images
+        if: always()
+        env:
+          COMMIT: ${{ forgejo.sha }}
+          RUN_ID: ${{ forgejo.run_id }}
+          ATTEMPT: ${{ forgejo.run_attempt }}
+          REPOSITORY: ${{ forgejo.repository }}
+        run: bash scripts/ci-cleanup-images.sh
