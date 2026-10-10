@@ -20,19 +20,19 @@ url_api = "https://api.github.com/repos/FiloSottile/age/releases/assets/53554190
 provenance = "github-attestations"
 
 [[tools."aqua:direnv/direnv"]]
-version = "2.37.1"
+version = "2.38.1"
 backend = "aqua:direnv/direnv"
-specifiers = ["2.37.1"]
+specifiers = ["2.38.1"]
 
 [tools."aqua:direnv/direnv"."platforms.linux-arm64"]
-checksum = "sha256:2a9cef8d73521d6a3ec3f2871c4b747b8c4cc038628c1b57a7efa42b393a2d82"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-arm64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610549"
+checksum = "sha256:a5deedd4165c94e629a4f3faf74fc0425d3c34a2fcee438a95d628a5f41f5bd8"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.linux-arm64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472958"
 
 [tools."aqua:direnv/direnv"."platforms.linux-x64"]
-checksum = "sha256:1f1b93dd6f38523fde26dfac96151ef9d31a374e3005cd3345fb93555ae0c9b5"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-amd64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610548"
+checksum = "sha256:a19470b6d93afeb226b89b1dabf95a5e559533905122be235ed35408e9983b3c"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.linux-amd64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472953"
 
 [[tools."aqua:getsops/sops"]]
 version = "3.13.3"
