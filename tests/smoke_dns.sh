@@ -8,13 +8,13 @@ docker=${DOCKER:-docker}
       test "$(id -u)" != 0
       mise --version | grep -q "^2026.10.4 "
       diff /usr/local/share/devcontainer-images/dns-versions.txt <(dnscontrol version; sops --version --disable-version-check; age --version; direnv version)
-      dnscontrol version | grep -q "5.3.0"
+      dnscontrol version | grep -q "5.3.1"
       test ! -w /opt/dev-tools/mise
       fixture=$(mktemp -d)
       trap "rm -rf \"$fixture\"" EXIT
       cd "$fixture"
       printf "[tools]\n\"github:DNSControl/dnscontrol\" = \"0.0.0\"\n" > mise.toml
-      dnscontrol version | grep -q "5.3.0"
+      dnscontrol version | grep -q "5.3.1"
       age-keygen -o key.txt >/dev/null 2>&1
       printf "{\"fixture\":\"dummy\"}\n" > plain.json
       sops --encrypt --age "$(age-keygen -y key.txt)" plain.json > encrypted.json

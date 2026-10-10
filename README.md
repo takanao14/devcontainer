@@ -71,7 +71,7 @@ tests, Python tests, and Ansible lint offline in a disposable source copy.
 It does not connect display, audio, or LED devices or deploy services.
 Declarations and dependency sidecars are in `images/rust/tools`. Use `make lock-rust`
 with a built Rust image and review the config, lock, and sidecar changes together.
-The DNS image installs dnscontrol 5.3.0, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
+The DNS image installs dnscontrol 5.3.1, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
 through pinned mise 2026.10.4 and the committed platform lockfile. Commands use
 direct image-owned paths, so project mise settings do not switch these tools.
 
@@ -80,7 +80,7 @@ make build-dns
 make verify-dns
 make verify-dns-lock  # Downloads an artifact to test checksum rejection
 make check-dns-project PROJECT=/absolute/path/to/homelab-private
-make codex IMAGE_REF=devcontainer-images:dns-5.3.0 PROJECT=/absolute/path/to/homelab-private NETWORK=bridge
+make codex IMAGE_REF=devcontainer-images:dns-5.3.1 PROJECT=/absolute/path/to/homelab-private NETWORK=bridge
 ```
 
 `check-dns-project` runs `dns-record`'s `make check` offline in a disposable
