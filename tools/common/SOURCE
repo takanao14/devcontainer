@@ -1,4 +1,4 @@
 yq: takanao14/dotfiles@44714eb116cdfea3e67be700121dcd005248e28f, selected from homelab/scripts/install/vendor.
-bootstrap: mise 2026.10.3; official SHASUMS256.txt.
-linux-x64: 8d48bc510b7d844fad0bc7156c0855c2a1e7230c51e498a7f6b63b021f8b57c5
-linux-arm64: 357260e28904569a6e7124d33b65cef6d043846c07bb8f4906ddf22cc353d61d
+bootstrap: mise 2026.10.4; official SHASUMS256.txt.
+linux-x64: 2b8ce21f550872807bcaabf45b6bc5c64bfbd6dc3bf49dd4e67de700ef3ceb75
+linux-arm64: 9013ce1d7d9bbbf65254cda178562f5450c474a705907c18b77e6b678bb10041

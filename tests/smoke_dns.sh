@@ -6,7 +6,7 @@ docker=${DOCKER:-docker}
 "$docker" run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
     "${DNS_IMAGE_REF:?DNS_IMAGE_REF is required}" bash -ec '
       test "$(id -u)" != 0
-      mise --version | grep -q "^2026.10.3 "
+      mise --version | grep -q "^2026.10.4 "
       diff /usr/local/share/devcontainer-images/dns-versions.txt <(dnscontrol version; sops --version --disable-version-check; age --version; direnv version)
       dnscontrol version | grep -q "5.3.0"
       test ! -w /opt/dev-tools/mise
