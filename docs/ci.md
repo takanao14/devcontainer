@@ -1,187 +1,85 @@
-# CI のビルド・検証・公開
+# CI とローカル検証
 
-## 構成
+## 責務
 
-`.forgejo/workflows/image.yml` は Forgejo Actions の `ubuntu-24.04` runner を使用する。
-main への push、pull request、手動実行でテストとイメージのビルド・検証を行う。
-公開は main への push または main 上の手動実行に限り、検証成功後に実行する。
+`.forgejo/workflows/image.yml` は main の push、pull request、手動実行で
+`make check` を実行する。イメージの生成・公開、コンテナ起動、ロック再生成は含まない。
+runner のラベルは `ubuntu-24.04`。Bash、Make、Git、jq、Mike Farah yq v4、
+ShellCheck、Node.js と npm が必要で、Docker daemon とレジストリ認証は不要。
 
-公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
-レジストリのホスト名は workflow の `CONTAINER_REGISTRY` に定義する。
-共通イメージのタグは `ci-<commit>-<run>-<attempt>`、派生イメージは同じタグに
-`dns-`・`go-`・`rust-` を付け、既存タグへの上書きを前提としない。
-CLI バージョンはイメージ内の `versions.txt` と検証ログ、公開先と digest は公開ログに残る。
-CLI の取得期限はビルド時点の48時間前で、イメージ内の `npm-before.txt` に記録する。
-`verify` は npm の選択処理で、期限直前・期限ちょうど・期限後のバージョンと
-若い固定バージョンの拒否をオフラインで確認する。
+`check` はランチャーとリモート操作のモックテスト、候補更新の失敗処理、
+共通・DNS・Go・Rust の宣言と保存済みロックの整合性、シェル構文・ShellCheck、
+npm の48時間の選択期限を確認する。workflow の YAML と埋め込まれたシェルも検査する。
+保存済みロックの検査には Linux x64 / ARM64 の URL・チェックサムと
+Python 依存グラフのファイル存在が含まれる。配布物の取得・インストール成功は保証しない。
 
-`renovate.json` は `minimumReleaseAge: "2 days"` と厳密な候補フィルターを指定する。
-公開日時がない候補は待機対象とする。用途別 mise 設定と固定した mise/rustup のバージョンを
-検出するが、ブートストラップのチェックサム・検証用の固定値や用途別ロックの更新はレビューを必要とする。
-実行基盤は既存の `takanao/renovate` を使用する。対象追加の
-[PR #8](https://forgejo.home.butaco.net/takanao/renovate/pulls/8) はマージ済み。
-対象は同リポジトリの
-`config.js` の `repositories` に登録する。更新 PR は Dependency Dashboard の
-承認後に作成し、自動マージは無効とする。Bot にはこのリポジトリの Write 権限が必要。
-Bot の Dashboard 作成を確認済み。既存 workflow へ GitHub の fine-grained token を
-Actions Secret 経由で渡した実行後、トークン不足・API レート制限の警告は解消した。
-`images/rust/tools/.mise/locks/**` は生成物のため依存検出から除外し、更新対象を
-用途別 `config.toml` に集約する。
-Renovate runner はインターネットへの IPv6 経路を持たないため、手動・定期実行で
-`--dns-result-order=ipv4first --no-network-family-autoselection` を使用する。
-通常設定で失敗した checkout タグ取得は、この設定で成功し、Dashboard の警告も解消した。
-定期実行への適用は既存 Renovate の
-[PR #13](https://forgejo.home.butaco.net/takanao/renovate/pulls/13) でマージ済み。
-
-`make check-locks` は固定した mise と uv を使い、4用途の Linux x64 / ARM64 ロックを
-一時コンテナ内で再生成して差分を検査する。宣言したバージョンは変更しない。
-CI の生成結果に差分があればイメージ公開前に失敗する。
-`make update-locks` は同じ生成処理の結果を作業ツリーへ戻すため、差分をレビューしてコミットする。
-Python の依存グラフは既存ロックを再利用し、依存の再解決による時刻だけの差分を作らない。
-Renovate がロックを更新できない候補も、この手順でロック・チェックサム・検証の固定値を
-揃えてからマージする。ロック生成用 Python は専用イメージに含み、ホストには要求しない。
-Docker とのファイル受け渡しは `docker cp` を使用し、runner と daemon のパス共有は不要。
-作業ツリーへ反映するホストには rsync が必要。
-
-## Runner と公開設定
-
-runner のジョブ環境には Docker CLI、Make、Bash、jq、Mike Farah yq v4、Git、
-checkout アクション用の Node.js が必要。Docker daemon へのアクセスと、
-Ubuntu・npm・GitHub Releases・checkout アクションの取得先への通信も必要になる。
-
-リポジトリの Actions 設定には次を登録する。
-
-| 種類 | 名前 | 内容 |
-| --- | --- | --- |
-| Secret | `REGISTRY_USER` | パッケージの公開権限を持つユーザー |
-| Secret | `REGISTRY_PASSWORD` | 同ユーザーのパッケージ書き込み用トークン |
-
-公開処理は workflow 内で実行する。認証情報は標準入力で Docker に渡し、
-Docker の認証設定はジョブ専用の一時ディレクトリに保存する。処理終了時にそのディレクトリを削除する。
-認証やタグ付けが失敗した場合、後続の公開処理は実行しない。
-
-## Runner の容量管理
-
-実行終了時は成功・失敗にかかわらず、その実行の共通・DNS・Go・Rust・ロック生成用の
-ローカルタグを削除する。公開先のタグを削除するのではなく、runner 内のタグだけを削除する。
-使用中のイメージは強制削除しない。runner の強制終了で後処理が動かなかった場合はタグが残る。
-ビルドキャッシュはイメージとレイヤーを共有するため、使用量を単純に加算しない。
-
-共有 Docker daemon のキャッシュは runner 管理側の GC が保持量を管理する。
-`docker` driver 用の設定例は `tools/ci/docker-gc.json` とし、保持量の目安を10GBとする。
-これは GC の削減基準であり、ビルド中の容量を保証する上限ではない。
-この workflow から daemon 全体への `prune` は実行しない。
-[Docker の GC 設定](https://docs.docker.com/build/cache/garbage-collection/)に従い、
-runner ホストで次の手順を実施する。
-
-1. CI 実行を止め、既存の `/etc/docker/daemon.json` をバックアップする。
-2. 既存設定の `builder.gc` に設定例を統合する。他の設定や既存のカスタム `policy` は確認して維持する。
-3. `sudo dockerd --validate --config-file /etc/docker/daemon.json` で構文・設定を検査する。
-4. Docker を再起動し、`docker system df`・`docker buildx du` と `df -h` で容量を確認する。
-
-既存の CI タグは自動削除の対象外なので、初回は不要なタグを整理してから CI を再開する。
-runner 上の GC 設定変更・Docker 再起動は、このリポジトリの変更では実施しない。
-
-## 検証
+## 利用端末での検証
 
 ```sh
-make test
-make verify
-make smoke-daemon
-make smoke-remote
-make check-dns-lock
-make check-go-lock
-make check-common-lock
-make check-rust-lock
-make build-dns
-make verify-dns
-make verify-dns-lock
-make build-go
-make verify-go
-make build-rust
-make verify-rust
-make verify-rust-lock
+make check
+make update-local KIND=common UPDATE_MODE=rebuild
+# 必要な派生イメージだけを選択する:
+make update-local KIND=dns
+make update-local KIND=go
+make update-local KIND=rust
 ```
 
-- `test` はランチャーの設定検証を確認する。
-- `check-dns-lock` は宣言とロックの対応、および AMD64 / ARM64 両方の URL・SHA-256 を確認する。
-  Go/API の宣言・ロックも `check-go-lock` で同じ条件を確認する。
-  共通ツールは `check-common-lock`、Rust のコンポーネント指定と Python 依存グラフの
-  ファイル存在は `check-rust-lock` で確認する。
-- DNS 派生イメージは同じ実行で検証した共通イメージからビルドする。
-  `verify-dns` は非 root 実行、バージョン、ダミーの暗号化・復号、direnv を確認する。
-  `verify-dns-lock` はロック欠落とチェックサム改変の拒否を確認するため、テスト用アーティファクトを取得する。
-- Go/API と Rust/LED も同じ実行で検証した共通イメージからビルドする。
-  `verify-go` は固定した Go・Buf、非 root 実行、自動ツールチェーン取得の無効化を確認する。
-  `verify-rust` は Rust コンポーネント、ネイティブライブラリ、Ansible、書き込み権限を確認する。
-  `verify-rust-lock` は Python 依存グラフのチェックサム改変をオフラインで拒否することを確認する。
-  4イメージすべての検証成功後に公開を開始し、派生タグには `dns-`・`go-`・`rust-` を付ける。
-  公開途中の失敗では、先に公開したタグが残る場合がある。
-- `verify` は非 root 実行、パスワードなし sudo の拒否、CLI のバージョン記録との一致を確認する。
-- `smoke-daemon` は一時的な名前付きボリュームを使い、読み取り専用アクセス、
-  コンテナ再作成後の状態保持、CLI の起動オプションを確認する。
-  runner のジョブがコンテナ内で動作していても、Docker daemon とパスの共有を必要としない。
-- `smoke-remote` は実コンテナ内のモック CLI を使用し、端末なしでの稼働継続と SIGTERM で
-  リモート停止処理が呼ばれることを確認する。認証情報・通信・ホストのバインドマウントは使用しない。
-  実際のペアリングやスマホの切断状態は検証しない。
+`update-local` は一意の候補参照を作成し、共通の `verify-local` が成功した後、
+選択した派生イメージをビルド・検証する。
+`verify-local` は CLI・ツール・非 root・sudo 制限、ホストの bind mount とソース編集、
+一時ボリュームの状態保持、モック CLI によるリモート停止を確認する。
+実際の認証・スマホからの接続・ペアリング再利用は利用者による確認が必要。
+テストは既存の認証情報を使用せず、テスト用ボリュームを終了時に削除する。
 
-ホストのバインドマウントとソース編集の反映は、ローカルの `make smoke` で別途確認する。
-`smoke-daemon` の成功だけではホストのバインドマウントを検証したことにはならない。
-どちらの結合テストも認証情報を使用せず、終了時にテスト用ボリュームを削除する。
+DNS は `verify-dns` と `verify-dns-lock` でツール、ダミー暗号化・復号、
+ロック不足とチェックサム改変の拒否を確認する。Go は `verify-go` で
+ツールと暗黙のツールチェーン取得の無効化を確認する。
+Rust は `verify-rust` と `verify-rust-lock` でコンポーネント・ネイティブライブラリ・
+Ansible と Python 依存グラフの改変拒否を確認する。
+DNS の改変拒否テストはテスト用配布物の取得を必要とする。
 
-## 検証状況
+候補の参照、イメージ ID、バージョン、検証結果は `.local-builds/` に記録する。
+失敗した候補と利用中のイメージは別の参照であり、更新コマンドによる切り替え・
+環境停止・状態削除は行わない。利用と復帰の手順は README に記載する。
+未検証のアーキテクチャは、その端末で利用前に検証する。
 
-Go/API・Rust/LED の CI ビルド・検証・公開を workflow に追加した。
-追加した検証ターゲットはローカル ARM64 でビルド後に成功し、ランチャーテスト、
-宣言・ロック検査、workflow のシェル構文も確認した。
-この追加分の AMD64 CI 実行と公開は未確認。
+## 依存更新
 
-[CI 実行 #4](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/4)で、
-コミット `dabb144` の共通・DNS イメージの AMD64 ビルド、権限・48時間の取得期限・
-daemon 状態保持・リモート終了処理の検証、DNS のダミー暗号化・復号とロック欠落／
-チェックサム改変の拒否、レジストリ公開が成功した。
-共通タグは `ci-dabb144bf7c5584c3d3c8cd6180f4bdaf5d5f779-551-1`、
-DNS タグは同じタグに `dns-` を付ける。
-公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
-共通 digest は `sha256:6870982fbc5ea017558cd3feb451d5d25220c68967edaedb86c1b33aa54f79d9`、
-DNS digest は `sha256:5631a563b7576b349979a87f66611e67e3ba840d93317dca139e60e1f91f32dd`。
-CLI は Codex 0.160.1、Claude Code 2.1.292。
+Renovate は既存の `takanao/renovate` が実行し、このリポジトリへの Write 権限を必要とする。
+更新候補には2日の待機期間を適用し、公開日時不明の候補は採用しない。
+Dependency Dashboard の承認後に PR を作成し、自動マージは無効。
+生成物 `images/rust/tools/.mise/locks/**` は検出対象外とする。
 
-mise 管理に移行した共通・Go/API・Rust/LED・DNS イメージの ARM64 ビルドと
-ツール検証はローカルで実行済み。48時間の取得期限を適用した CLI は
-Codex 0.160.1、Claude Code 2.1.291 で、npm の公開日時が期限内であることを確認した。
-この共通イメージで daemon の状態保持とリモート終了処理も確認した。
-Renovate 設定は公式イメージ `renovate/renovate:44.139.0` の厳密な設定検査に成功した。
-用途別の既存 `lock-*` ターゲットも利用できる。CI は宣言・ロックの検査に加え、
-`make check-locks` でロックの再生成・差分検査を行う。
-ローカル ARM64 で再生成の差分検出、`update-locks` による正規化、再実行時の差分なしを
-確認した。ステージ分割後の共通イメージのビルド・検証も成功した。
-[CI 実行 #5](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/5) で、
-コミット `a89ac4e` の AMD64 runner における4用途の両 Linux プラットフォームの
-ロック再生成・差分なし、共通・DNS イメージのビルド・検証・公開を確認した。
-公開タグは `ci-a89ac4ecc856bf61f60598e2b8ca6a675e97cb39-552-1` とその `dns-` 接頭辞付き。
-共通 digest は `sha256:24211521b2dd3f32d35c69aed6e793ca0889382c9a275f8a446c3b6d5da111a8`、
-DNS digest は `sha256:18b2c43bf31d80e5809264b78483d3ab26881131c6b3ae9e0c6196ae36051b54`。
+ブートストラップの更新では配布チェックサムと検証の固定値を揃える。
+用途別宣言の更新では `make update-locks` を利用端末で実行し、ロック・依存 sidecar の
+差分をレビューする。`make check-locks` は専用コンテナで両 Linux プラットフォームの
+ロックを再生成し、差分を検査する。これらはイメージを生成するローカル専用操作で、
+CI の `check` とは異なる。反映にはホストの rsync が必要。
+マージ前には対象イメージのローカルビルド・検証結果を PR に記録する。
 
-[CI 実行 #1](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/1)で、
-amd64 ビルド、ランチャー検証、権限・永続化テスト、レジストリへの公開が成功した。
-公開タグは `ci-478ed3bb4bab3216faeaf698a96563f066bd68ac-533-1`。
-CLI は Codex 0.160.1、Claude Code 2.1.292。Secret の利用も確認済み。
+既存 Renovate の GitHub fine-grained token による依存取得は確認済み。
+同 runner は IPv6 のインターネット経路を持たないため、手動・定期実行に
+`--dns-result-order=ipv4first --no-network-family-autoselection` を使用する。
+このリポジトリの CI 簡素化は Renovate の実行設定を変更しない。
 
-arm64 のローカルビルド、権限・マウント・状態保存のテスト、両 CLI のサインインと
-再起動後の認証・履歴保持は、利用者の macOS / OrbStack 環境で確認済み。
-CI は runner のネイティブアーキテクチャのみを公開し、複数アーキテクチャでの公開は未検証。
-リモート終了処理のスモークテストと既存のマウント・状態保存テストは、
-ローカル ARM64 イメージで実行済み。
+## 旧 CI からの整理
 
-[CI 実行 #3](https://forgejo.home.butaco.net/takanao/devcontainer-images/actions/runs/3)で、
-共通ツール追加後の AMD64 ビルド、yq 4.54.1 の SHA-256 検証と YAML/JSON 変換、
-ShellCheck 0.11.0、権限・永続化・リモート終了処理のテスト、レジストリ公開が成功した。
-実行 #2 は runner に rg がないためテストで失敗し、テスト側の依存を修正して再実行した。
-公開タグは `ci-06f212e6b135253e661c2acdc33101b68a1449a0-540-1`、
-公開先は `forgejo.home.butaco.net/takanao/devcontainer-images`。
-digest は `sha256:884afb83a0ea0004e13f373edebdc0d939e61a2ea6ae597d627028f4f864a9dc`。
-これは AMD64 の成果物であり、ARM64 の CI ビルド・公開は引き続き未対応。
+PR #11 の per-run イメージ削除は、イメージを生成しない workflow では使用しない。
+専用 cleanup と GC 設定例は本変更で削除する。共有 runner の Docker 設定には触れない。
 
-手元の OrbStack からの公開イメージ取得は、レジストリへの HTTPS 接続で `EOF` となり未完了。
-ホスト側の HTTPS 接続は認証要求（401）を返すため、Docker daemon 側の接続経路の調査が必要。
+以前の AMD64 CI では共通・DNS・Go・Rust のビルド・検証・公開が成功した。
+新しい CI ではその実行時検証を行わない。ローカル運用の確認後に管理者が次を行う。
+
+1. このリポジトリ専用の Actions Secret `REGISTRY_USER` と `REGISTRY_PASSWORD` を削除する。
+2. 共有トークンの失効は他用途の有無を確認して判断する。
+3. 既存の runner イメージ・キャッシュとレジストリ成果物は、他ジョブ・利用端末の参照を確認して整理する。
+
+通常のビルドや CI には全体 prune を含めない。
+移行の詳細と完了条件は[ローカルビルド計画](local-build-plan.md)を参照する。
+
+## 本変更の検証
+
+2026-10-10 にローカル ARM64 で `make check`、共通候補の `update-local`、
+その候補をベースとした DNS・Go・Rust のビルドと各検証を確認した。
+バックアップ・復元手順は一時ボリュームのダミーデータで所有者とアクセス権の保持を確認した。
+実際の認証状態の復元と更新後のスマホ接続は、本変更では未確認。

@@ -1,7 +1,10 @@
 const assert = require('node:assert/strict');
-const { readFileSync, realpathSync } = require('node:fs');
+const { readFileSync, realpathSync, existsSync } = require('node:fs');
 const { createRequire } = require('node:module');
-const pickManifest = createRequire(realpathSync('/usr/bin/npm'))('npm-pick-manifest');
+const { delimiter, join } = require('node:path');
+const npmPath = process.env.PATH.split(delimiter).map(dir => join(dir, 'npm')).find(existsSync);
+assert.ok(npmPath, 'npm is required');
+const pickManifest = createRequire(realpathSync(npmPath))('npm-pick-manifest');
 
 const before = '2026-10-06T00:00:00Z';
 const manifest = {
@@ -21,8 +24,10 @@ assert.throws(() => pickManifest(manifest, '1.2.0', { before }), { code: 'ETARGE
 assert.throws(() => pickManifest(manifest, 'latest', { before: '2026-10-05T00:00:00Z' }),
   { code: 'ENOVERSIONS' });
 
-const recorded = readFileSync('/usr/local/share/devcontainer-images/npm-before.txt', 'utf8').trim();
-assert.ok(Number.isFinite(Date.parse(recorded)));
-assert.ok(Date.now() - Date.parse(recorded) >= 2 * 24 * 60 * 60 * 1000);
-assert.equal(process.env.MISE_MINIMUM_RELEASE_AGE, '2d');
+if (process.argv.includes('--image-policy')) {
+  const recorded = readFileSync('/usr/local/share/devcontainer-images/npm-before.txt', 'utf8').trim();
+  assert.ok(Number.isFinite(Date.parse(recorded)));
+  assert.ok(Date.now() - Date.parse(recorded) >= 2 * 24 * 60 * 60 * 1000);
+  assert.equal(process.env.MISE_MINIMUM_RELEASE_AGE, '2d');
+}
 console.log('npm excludes young releases, accepts the cutoff boundary, and rejects unavailable pins');

@@ -1,88 +1,28 @@
-name: Development image
+name: Repository checks
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
 
-env:
-  CONTAINER_REGISTRY: forgejo.home.butaco.net
-
 jobs:
-  image:
+  checks:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: Test launcher
+      - name: Ensure ShellCheck is available
         run: |
-          bash --version
-          yq --version
-          jq --version
-          make test
-          bash tests/test_ci_cleanup.sh
-          make check-common-lock
-          make check-dns-lock
-          make check-go-lock
-          make check-rust-lock
-      - name: Regenerate and compare tool locks
-        run: make check-locks LOCK_IMAGE_REF="devcontainer-images:locks-${{ forgejo.sha }}-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}"
-      - name: Build and verify
-        env:
-          COMMIT: ${{ forgejo.sha }}
-          RUN_ID: ${{ forgejo.run_id }}
-          ATTEMPT: ${{ forgejo.run_attempt }}
-        run: |
-          set -eu
-          image_ref="devcontainer-images:ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
-          make rebuild IMAGE_REF="$image_ref"
-          make verify IMAGE_REF="$image_ref"
-          make smoke-daemon IMAGE_REF="$image_ref"
-          make smoke-remote IMAGE_REF="$image_ref"
-          dns_image_ref="devcontainer-images:dns-ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
-          make build-dns IMAGE_REF="$image_ref" DNS_IMAGE_REF="$dns_image_ref"
-          make verify-dns DNS_IMAGE_REF="$dns_image_ref"
-          make verify-dns-lock DNS_IMAGE_REF="$dns_image_ref"
-          go_image_ref="devcontainer-images:go-ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
-          make build-go IMAGE_REF="$image_ref" GO_IMAGE_REF="$go_image_ref"
-          make verify-go GO_IMAGE_REF="$go_image_ref"
-          rust_image_ref="devcontainer-images:rust-ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
-          make build-rust IMAGE_REF="$image_ref" RUST_IMAGE_REF="$rust_image_ref"
-          make verify-rust RUST_IMAGE_REF="$rust_image_ref"
-          make verify-rust-lock RUST_IMAGE_REF="$rust_image_ref"
-      - name: Publish verified images
-        if: forgejo.event_name != 'pull_request' && forgejo.ref == 'refs/heads/main'
-        env:
-          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
-          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-          REPOSITORY: ${{ forgejo.repository }}
-          COMMIT: ${{ forgejo.sha }}
-          RUN_ID: ${{ forgejo.run_id }}
-          ATTEMPT: ${{ forgejo.run_attempt }}
-        run: |
-          set -eu
-          : "${REGISTRY_USER:?Set REGISTRY_USER}"
-          : "${REGISTRY_PASSWORD:?Set REGISTRY_PASSWORD}"
-          export DOCKER_CONFIG
-          DOCKER_CONFIG=$(mktemp -d)
-          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
-          printf '%s' "$REGISTRY_PASSWORD" | docker login "$CONTAINER_REGISTRY" --username "$REGISTRY_USER" --password-stdin
-          tag="ci-${COMMIT}-${RUN_ID}-${ATTEMPT}"
-          repository=$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
-          for image_tag in "$tag" "dns-$tag" "go-$tag" "rust-$tag"; do
-            target="$CONTAINER_REGISTRY/$repository:$image_tag"
-            docker tag "devcontainer-images:$image_tag" "$target"
-            docker push "$target"
-            printf 'Published %s\n' "$target"
-            docker image inspect "$target" --format '{{json .RepoDigests}}'
-          done
-      - name: Remove this run's local images
-        if: always()
-        env:
-          COMMIT: ${{ forgejo.sha }}
-          RUN_ID: ${{ forgejo.run_id }}
-          ATTEMPT: ${{ forgejo.run_attempt }}
-          REPOSITORY: ${{ forgejo.repository }}
-        run: bash scripts/ci-cleanup-images.sh
+          if ! command -v shellcheck >/dev/null; then
+            if [ "$(id -u)" = 0 ]; then
+              apt-get update
+              apt-get install -y --no-install-recommends shellcheck
+            else
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends shellcheck
+            fi
+          fi
+      - name: Validate repository without Docker
+        run: make check

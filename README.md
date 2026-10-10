@@ -10,10 +10,9 @@ escalation with `no-new-privileges`.
 Docker must be running on the host. The launcher uses Bash and jq; YAML mounts
 require Mike Farah yq v4. No Python runtime is required.
 
-During configuration development, Apple Silicon Macs use locally built ARM64
-images through Docker / OrbStack. The existing Forgejo CI builds and publishes
-AMD64 images; ARM64 publication is not available yet. Local builds remain the
-ARM64 usage path until the configuration is stable and ARM64 CI is available.
+Each usage machine builds and verifies its own native images. Apple Silicon
+Macs use ARM64 through Docker / OrbStack. Forgejo CI runs static repository
+checks without building containers or publishing images.
 
 ```sh
 make build
@@ -33,6 +32,7 @@ Runtime commands use image-owned paths rather than project-selected mise shims.
 Toolchain downloads at runtime are disabled (`GOTOOLCHAIN=local`).
 
 ```sh
+make build
 make build-go
 make verify-go
 make check-go-lock
@@ -57,6 +57,7 @@ mise declares Rust's profile and components and replays Ansible's committed
 Python dependency graphs with uv 0.12.23. rustup 1.29.1 remains checksum-pinned.
 
 ```sh
+make build
 make build-rust
 make verify-rust
 make check-rust-lock
@@ -76,6 +77,7 @@ through pinned mise 2026.10.4 and the committed platform lockfile. Commands use
 direct image-owned paths, so project mise settings do not switch these tools.
 
 ```sh
+make build
 make build-dns
 make verify-dns
 make verify-dns-lock  # Downloads an artifact to test checksum rejection
@@ -96,7 +98,7 @@ installation time.
 
 The common image supplies checksum-pinned mise 2026.10.4 and installs yq 4.54.1
 from `tools/common`'s committed lock. APT still supplies OS packages and npm
-installs agent CLIs under the CI image-update policy. `make check-common-lock`
+installs agent CLIs under the local image-update policy. `make check-common-lock`
 checks the application lock; `make lock-common` refreshes its platform metadata.
 New application releases have a two-day cooldown. Agent CLI installation uses
 npm's `--before` cutoff for direct and transitive registry dependencies; the
@@ -170,47 +172,87 @@ Stop the remote environment before switching images, then start it again.
 `make verify` checks CLI versions and user permissions without credentials.
 Resolved versions are recorded in `/usr/local/share/devcontainer-images/versions.txt`.
 
-[Forgejo Actions](.forgejo/workflows/image.yml) tests, builds, and verifies on
-pull requests and main pushes. Main pushes and manual runs on main publish a
-unique `ci-<commit>-<run>-<attempt>` common image tag and derived image tags
-with `dns-`, `go-`, and `rust-` prefixes after all four pass verification.
-DNS checks cover both platform lock records and rejection of missing locks and
-invalid checksums. The `ubuntu-24.04`
-runner needs Docker, Make, Bash, jq, Mike Farah yq v4, Git, and Node.js for checkout. CI uses named-volume smoke tests so the job and daemon need not share
-filesystem paths. Local `make smoke` separately verifies host bind mounts. Publication targets
-`forgejo.home.butaco.net/takanao/devcontainer-images`; the registry hostname is
-defined in the workflow. Configure `REGISTRY_USER` and `REGISTRY_PASSWORD` secrets with package write
-access. CI runs #1 and #3 verified AMD64 builds, tests, and registry publication;
-run #3 includes yq, ShellCheck, and remote lifecycle validation.
-The initial workflow builds the runner's native architecture only.
-See [CI setup and verification](docs/ci.md) for required settings and test coverage.
+[Forgejo Actions](.forgejo/workflows/image.yml) runs `make check` on pull requests,
+main pushes, and manual runs. Checks include mock launcher/lifecycle tests,
+committed lock consistency, shell syntax, ShellCheck, and npm release-age tests.
+The runner needs Bash, Make, Git, jq, Mike Farah yq v4, ShellCheck, Node.js, and npm;
+Docker and registry credentials are not required. Runtime checks run locally.
+See [CI and local verification](docs/ci.md) for coverage and migration cleanup.
+
 `renovate.json` applies the two-day cooldown to update candidates and includes
 the custom mise config paths and mise/rustup bootstrap versions. Bootstrap
 updates also require reviewing the published checksums and version checks.
 The existing `takanao/renovate` service manages this repository; bot access and
 dependency lookup with a GitHub fine-grained token have been verified.
 Update proposals require Dependency Dashboard approval and are not automatically
-merged. CI regenerates all four tool locks
-for Linux x64 and ARM64 and rejects differences before building application
-images. Run `make update-locks` to apply generated locks locally for review;
+merged. Tool locks for Linux x64 and ARM64 are regenerated and compared locally. Run `make update-locks` to apply generated locks locally for review;
 `make check-locks` checks them without modifying the working tree. These targets
 use a disposable non-root container and `docker cp`, without shared daemon paths.
 Applying generated locks also requires rsync on the host.
 Generated Python manifests under `images/rust/tools/.mise/locks/` are excluded
 from dependency extraction; the tool config remains the update source.
 
-For AMD64, use the published reference from CI, optionally a digest, to fetch
-and run without building locally:
+Use a unique verified candidate for updates:
 
 ```sh
-make pull IMAGE_REF=registry.example.com/owner/devcontainer-images:ci-commit-run-attempt
-make shell IMAGE_REF=registry.example.com/owner/devcontainer-images:ci-commit-run-attempt PROJECT=/absolute/path/to/project
+make update-local KIND=common UPDATE_MODE=rebuild
+# KIND=dns, go, or rust also builds and verifies that derived image.
+# Use the Verified candidate printed by the command:
+make codex IMAGE_REF=devcontainer-images:local-<build-id> PROJECT=/absolute/path/to/project NETWORK=bridge
 ```
 
-Local ARM64 updates use `make rebuild`; published-image updates select a newer
-reference, and rollback selects a previous reference.
-State format changes may require restoring a matching volume backup. Registry
-retention and scheduled updates are not configured.
+`update-local` never replaces an existing tag, stops a running environment, or
+removes state. It verifies the common image before building the selected
+component. `.local-builds/<build-id>/result.json` records the source commit,
+working-tree changes, architecture, selected reference, image ID, versions,
+and success or failure. Failed candidates are retained for investigation.
+Direct `build-*` targets require an existing `IMAGE_REF` and do not rebuild it.
+`make verify-local` checks common tools, permissions, mounts, state persistence,
+and mock remote shutdown. Derived checks use `verify-dns`, `verify-go`, or
+`verify-rust`, plus the DNS/Rust lock rejection checks.
+
+Keep the previous image reference before switching. Stop remote sessions with
+`make codex-remote-stop PROJECT=/absolute/path/to/project`, and close other
+sessions using the same state volumes. Inspect `DRY_RUN=1` output for their
+names. For each stopped state volume, create a protected backup directory and
+archive it using the old image (repeat for Codex and Claude):
+
+```sh
+umask 077
+mkdir -p /absolute/path/to/state-backup
+docker run --rm --user 0 --network none --cap-drop ALL --cap-add DAC_OVERRIDE --security-opt no-new-privileges \
+  --mount type=volume,source=<state-volume>,target=/state,readonly \
+  --mount type=bind,source=/absolute/path/to/state-backup,target=/backup \
+  <old-image-reference> tar -C /state -czf /backup/<state-volume>.tar.gz .
+```
+
+Backups contain credentials and history; keep them outside Git. Start the new
+reference explicitly. To roll back, stop sessions and select the old reference.
+If the old CLI cannot read the changed state, restore its matching archive into
+a new temporary volume first:
+
+```sh
+docker volume create <restore-check-volume>
+docker run --rm --user 0 --network none --cap-drop ALL \
+  --cap-add DAC_OVERRIDE --cap-add CHOWN --cap-add FOWNER --security-opt no-new-privileges \
+  --mount type=volume,source=<restore-check-volume>,target=/state \
+  --mount type=bind,source=/absolute/path/to/state-backup,target=/backup,readonly \
+  <old-image-reference> tar --numeric-owner -C /state -xzf /backup/<state-volume>.tar.gz
+docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+  --mount type=volume,source=<restore-check-volume>,target=/state,readonly \
+  <old-image-reference> ls -la /state
+```
+
+After checking that archive extraction succeeded and the developer can read
+its state, preserve a separate backup of the failed new state. With every
+session stopped, remove and recreate only the original named state volume,
+then repeat the extraction command with that original name. Start the old
+image and confirm authentication, pairing, and history. Keep both backups
+until recovery succeeds; delete the temporary verification volume afterward.
+`make pull` remains available for optional external image references.
+Image and cache cleanup is an explicit operator action; no automatic prune is
+part of builds. Same-commit rebuilds can differ because CLI and APT selection
+also depends on build time.
 
 Project-specific toolchains are supplied by the derived images. The
 [Project tool inventory](docs/project-tools.md) lists requirements and validation.
