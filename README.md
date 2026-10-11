@@ -89,12 +89,35 @@ make codex IMAGE_REF=devcontainer-images:dns-5.3.1 PROJECT=/absolute/path/to/hom
 copy without loading credentials or `.envrc`. Verification uses temporary
 keys and dummy data for encryption; host keys are not mounted. direnv's shell
 hook and environment approval are not enabled automatically.
-The infrastructure image is not implemented yet.
+
 DNS versions are declared in `images/dns/tools/config.toml`; `SOURCE` records
 their origin. After changing declarations, use `make lock-dns` and review the
 config and lock diff before rebuilding. SOPS uses the Aqua backend; mise trusts
 checksum-backed provenance recorded in the lock without re-verifying SLSA at
 installation time.
+
+The initial infrastructure image provides Terraform 1.16.5, Terragrunt 1.1.6,
+and Packer 1.16.1 using reviewed mise locks for Linux AMD64 and ARM64.
+Terraform is an image pin because homelab does not pin an exact CLI version;
+Terragrunt and Packer match homelab's existing declarations. The image uses
+fixed executable paths and disables HashiCorp checkpoint requests.
+
+```sh
+make update-local KIND=infra
+# Use the verified candidate printed by the command:
+make check-infra-project INFRA_IMAGE_REF=<verified-infra-reference> PROJECT=/absolute/path/to/homelab
+make codex IMAGE_REF=<verified-infra-reference> PROJECT=/absolute/path/to/homelab NETWORK=bridge
+```
+
+For direct builds, first build the common image, then use `make build-infra`
+and `make verify-infra`. `check-infra-lock` checks both platform records;
+`update-locks` and `check-locks` include the infrastructure declarations.
+`check-infra-project` mounts only `tf/` and `packer/` read-only and checks a
+disposable copy offline. It checks Terraform/Terragrunt formatting and Packer
+syntax, without provider/plugin validation, backend access, or deployment.
+QEMU, Ansible collections, Kubernetes tools, and other infrastructure tools
+remain future additions. Host credentials and Docker/device access are not
+part of this image.
 
 The common image supplies checksum-pinned mise 2026.10.4 and installs yq 4.54.1
 from `tools/common`'s committed lock. APT still supplies OS packages and npm
@@ -196,7 +219,7 @@ Use a unique verified candidate for updates:
 
 ```sh
 make update-local KIND=common UPDATE_MODE=rebuild
-# KIND=dns, go, or rust also builds and verifies that derived image.
+# KIND=dns, go, rust, or infra also builds and verifies that derived image.
 # Use the Verified candidate printed by the command:
 make codex IMAGE_REF=devcontainer-images:local-<build-id> PROJECT=/absolute/path/to/project NETWORK=bridge
 ```
@@ -208,8 +231,8 @@ working-tree changes, architecture, selected reference, image ID, versions,
 and success or failure. Failed candidates are retained for investigation.
 Direct `build-*` targets require an existing `IMAGE_REF` and do not rebuild it.
 `make verify-local` checks common tools, permissions, mounts, state persistence,
-and mock remote shutdown. Derived checks use `verify-dns`, `verify-go`, or
-`verify-rust`, plus the DNS/Rust lock rejection checks.
+and mock remote shutdown. Derived checks use `verify-dns`, `verify-go`,
+`verify-rust`, or `verify-infra`, plus the DNS/Rust lock rejection checks.
 
 Keep the previous image reference before switching. Stop remote sessions with
 `make codex-remote-stop PROJECT=/absolute/path/to/project`, and close other

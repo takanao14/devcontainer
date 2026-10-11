@@ -4,7 +4,7 @@ set -euo pipefail
 
 kind=${1:-common}
 mode=${2:-build}
-case "$kind" in common|dns|go|rust) ;; *) echo 'KIND must be common, dns, go, or rust' >&2; exit 1 ;; esac
+case "$kind" in common|dns|go|rust|infra) ;; *) echo 'KIND must be common, dns, go, rust, or infra' >&2; exit 1 ;; esac
 case "$mode" in build|rebuild) ;; *) echo 'UPDATE_MODE must be build or rebuild' >&2; exit 1 ;; esac
 docker_command=${DOCKER:-docker}
 make_command=${MAKE:-make}

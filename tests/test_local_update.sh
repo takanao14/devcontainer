@@ -27,9 +27,10 @@ jq -e '.status == "verified" and .architecture == "arm64" and .kind == "dns" and
 base=$(jq -r .base_ref "$record")
 grep -F "make build-dns IMAGE_REF=$base DNS_IMAGE_REF=" "$LOG" >/dev/null
 if grep -E 'prune|remote-stop|volume rm|docker tag' "$LOG"; then exit 1; fi
+bash scripts/local-update.sh infra build
 export FAIL_STEP=verify-local
 if bash scripts/local-update.sh go build; then echo 'Accepted failed verification' >&2; exit 1; fi
-jq -se 'length == 2 and ([.[].selected_ref] | unique | length) == 2 and any(.[]; .status == "failed")' "$BUILD_RECORD_DIR"/*/result.json >/dev/null
+jq -se 'length == 3 and ([.[].selected_ref] | unique | length) == 3 and any(.[]; .status == "failed")' "$BUILD_RECORD_DIR"/*/result.json >/dev/null
 if grep -q 'make build-go' "$LOG"; then echo 'Built derivative after base verification failure' >&2; exit 1; fi
 if bash scripts/local-update.sh invalid; then exit 1; fi
 printf 'Local candidate isolation and failure handling passed\n'

@@ -4,6 +4,7 @@ TAG ?= ubuntu-26.04
 IMAGE_REF ?= $(IMAGE):$(TAG)
 GO_IMAGE_REF ?= $(IMAGE):go-1.27.1
 RUST_IMAGE_REF ?= $(IMAGE):rust-1.99.0
+INFRA_IMAGE_REF ?= $(IMAGE):infra
 DNS_IMAGE_REF ?= $(IMAGE):dns-5.3.1
 PROJECT ?= $(CURDIR)
 MOUNTS ?=
@@ -11,6 +12,7 @@ NETWORK ?= none
 DRY_RUN ?= 0
 LOCK_IMAGE_REF ?= $(IMAGE):lock-tools
 
+export INFRA_IMAGE_REF
 export DOCKER IMAGE IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF DNS_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
 export LOCK_IMAGE_REF
 .PHONY: build-lock-tools check-locks update-locks
@@ -162,7 +164,7 @@ smoke-remote: ## Check remote lifecycle in Docker without credentials
 	bash tests/smoke_codex_remote.sh
 
 .PHONY: check-bootstrap check check-shell check-base verify-local update-local
-check: test check-bootstrap check-common-lock check-dns-lock check-go-lock check-rust-lock check-shell ## Run CI checks without Docker
+check: test check-bootstrap check-common-lock check-dns-lock check-go-lock check-rust-lock check-infra-lock check-shell ## Run CI checks without Docker
 	node tests/test_npm_release_age.cjs
 	bash tests/test_local_update.sh
 	bash tests/test_static_ci.sh
@@ -175,8 +177,22 @@ check-base: ## Require the explicitly selected local base image
 
 verify-local: verify smoke smoke-daemon smoke-remote ## Verify the common image and local lifecycle
 
-update-local: ## Build and verify a unique candidate (KIND=common|dns|go|rust)
+update-local: ## Build and verify a unique candidate (KIND=common|dns|go|rust|infra)
 	@bash scripts/local-update.sh "$(or $(KIND),common)" "$(or $(UPDATE_MODE),build)"
 
 check-bootstrap: ## Check reviewed mise bootstrap version and checksums
 	bash tests/check_bootstrap.sh
+
+.PHONY: build-infra check-infra-lock verify-infra check-infra-project
+build-infra: check-base check-infra-lock ## Build the initial infrastructure tool image
+	$(DOCKER) build --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(INFRA_IMAGE_REF)" images/infra
+
+check-infra-lock: ## Check infrastructure declarations and both platform artifacts
+	bash tests/check_tool_lock.sh images/infra/tools
+
+verify-infra: ## Verify infrastructure tools and offline syntax checks as non-root
+	$(MAKE) verify IMAGE_REF="$(INFRA_IMAGE_REF)"
+	bash tests/smoke_infra.sh
+
+check-infra-project: ## Check homelab Terraform/Terragrunt formatting and Packer syntax offline
+	bash tests/check_infra_project.sh

@@ -16,8 +16,8 @@ exit 99
 MOCK
 chmod +x "$fixture/docker"
 # Do not recursively invoke check: these are the Docker-independent CI targets.
-make test check-common-lock check-dns-lock check-go-lock check-rust-lock DOCKER="$fixture/docker"
-for kind in dns go rust; do
+make test check-common-lock check-dns-lock check-go-lock check-rust-lock check-infra-lock DOCKER="$fixture/docker"
+for kind in dns go rust infra; do
     commands=$(make -n "build-$kind" IMAGE_REF=devcontainer-images:reviewed-base)
     if printf '%s\n' "$commands" | grep -q ' build .* -t .*reviewed-base'; then
         echo 'Derivative rebuilds the selected base' >&2; exit 1
