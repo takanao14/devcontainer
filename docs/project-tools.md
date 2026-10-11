@@ -73,6 +73,17 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Forgejo workflow は保存済みロックの整合性検査を行い、ビルド・公開は行わない。
   旧 Forgejo CI の実行 #4 では AMD64 のビルド・検証・公開を確認した。
 
+- インフラの初期イメージは `images/infra/Dockerfile` とし、Terraform 1.16.5、
+  Terragrunt 1.1.6、Packer 1.16.1 を提供する。取り込み元は homelab の
+  `fe14246af3bfa7aa8b6a214dc2538903f92b0631`。Terragrunt は mise 宣言、
+  Packer は CI の固定値を参照し、Terraform は既存の厳密な固定値がないため
+  イメージ側の初期値とする。各正式リリースの公開後48時間経過と、
+  Linux x64 / ARM64 のロックに記録した SHA-256 の公式チェックサムとの一致を確認した。
+  ローカル ARM64 でツール・非 root・固定パス・ダミー構成の検証と、homelab の
+  Terraform/Terragrunt の整形および Packer の構文検査をネットワークなしで確認した。
+  Terraform の実プロジェクトの provider 検証、Packer のプラグインによる設定検証、
+  実環境への操作は未実施。QEMU、Ansible・Kubernetes 関連などは追加対象として残す。
+
 - homelab は、dotfiles から取り込んだ mise 設定とロックファイルで共通 Linux CLI の
   バージョンを管理している（ADR-0049）。確認時点の設定では Terragrunt 1.1.6、
   Helm 4.3.0、Helmfile 1.8.1、k0sctl 0.33.1、Cilium CLI 0.20.1、

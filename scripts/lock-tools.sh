@@ -12,7 +12,7 @@ cleanup() {
     rm -rf "$fixture"
 }
 trap cleanup EXIT
-paths=(tools/common images/go/tools images/rust/tools images/dns/tools)
+paths=(tools/common images/go/tools images/rust/tools images/dns/tools images/infra/tools)
 for path in "${paths[@]}"; do
     mkdir -p "$fixture/input/$path"
     cp -R "$path/." "$fixture/input/$path/"
@@ -26,7 +26,7 @@ container=$("$docker" create --user "$(id -u):$(id -g)" -e HOME=/tmp --network b
       export MISE_CONFIG_FILE=/work/uv/config.toml
       mise install --yes --locked
       export PATH="$(dirname "$(mise which uv)"):$PATH"
-      for path in tools/common images/go/tools images/rust/tools images/dns/tools; do
+      for path in tools/common images/go/tools images/rust/tools images/dns/tools images/infra/tools; do
         export MISE_CONFIG_FILE="/work/$path/config.toml"
         mise --yes lock --global --platform linux-x64,linux-arm64
       done

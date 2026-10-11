@@ -1,0 +1,9 @@
+homelab: fe14246af3bfa7aa8b6a214dc2538903f92b0631.
+Terragrunt 1.1.6: scripts/install/vendor/mise-config.toml and .github/workflows/tf-lint.yaml.
+Packer 1.16.1: .github/workflows/packer-lint.yaml; packer/README.md requires >=1.15.0.
+Terraform has no exact project pin; 1.16.5 is the initial image pin, not a change to homelab.
+Release dates checked 2026-10-11 using official GitHub release metadata:
+Terraform 1.16.5: 2026-10-02T13:04:00Z.
+Terragrunt 1.1.6: 2026-09-21T13:27:08Z.
+Packer 1.16.1: 2026-09-18T12:52:47Z.
+Platform checksums: HashiCorp release SHA256SUMS and Terragrunt release SHA256SUMS.
