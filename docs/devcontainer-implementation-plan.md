@@ -167,9 +167,11 @@ make codex PROJECT=/path/to/homelab MOUNTS=mounts.local.yaml NETWORK=bridge
 | --- | --- |
 | Go/API | Go、Buf |
 | Rust/LED | Rust、Cargo、rustfmt、Clippy、protoc、pkg-config、ALSA 開発用ヘッダー、Python、Ansible |
-| DNS | dnscontrol、SOPS、age、direnv |
-| インフラ初期構成 | Terraform、Terragrunt、Packer |
+| インフラ初期構成（DNS を含む） | Terraform、Terragrunt、Packer、dnscontrol、SOPS、age、direnv |
 | インフラ追加構成 | QEMU ツール、Ansible コレクション、kubectl、Helm、Helmfile、helm-diff、k0sctl、Cilium CLI、yq、ShellCheck、rclone、OpenBao CLI |
+
+DNS とインフラは同じ派生イメージを使用し、コンテナと認証状態はプロジェクトごとに分離する。
+統合の実装手順と検証条件は[統合計画](infra-consolidation-plan.md)に従う。
 
 [プロジェクト別ツール一覧](project-tools.md)と homelab に取り込まれた mise 設定を
 バージョンの参照元にする。Go と dnscontrol はプロジェクト間でバージョンが異なるため、
@@ -257,7 +259,7 @@ YAML 設定、初回サインイン、CLI の更新・バージョン確認・�
    オフライン検査・暗号化のテストと、ロック不足・不正チェックサムの拒否を確認する。
 3. Linux x64 / ARM64 のロック生成・差分検査を利用端末で行い、静的な整合性検査を CI に組み込む。
 4. 共通ツールと Go/API に展開する。Rust のコンポーネント指定と Python の推移的依存の
-   ロック再現・破損拒否を確認し、Rust/LED に適用する。インフラの初期構成は3ツールとし、追加構成は用途ごとに実装する。
+   ロック再現・破損拒否を確認し、Rust/LED に適用する。インフラの初期構成は DNS を含む7ツールとし、追加構成は用途ごとに実装する。
 
 共通・派生イメージは利用端末のネイティブアーキテクチャでビルド・検証する。
 ローカル更新、静的 CI への移行、既存公開成果物の整理は[移行計画](local-build-plan.md)に従う。

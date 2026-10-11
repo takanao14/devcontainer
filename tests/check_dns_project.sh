@@ -7,7 +7,7 @@ project=$(cd -- "${PROJECT:?PROJECT is required}/dns-record" && pwd -P)
 [[ $project != *','* ]] || { printf 'error: PROJECT cannot contain a comma\n' >&2; exit 1; }
 "$docker" run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
     --mount "type=bind,source=$project,target=/source,readonly" \
-    "${DNS_IMAGE_REF:?DNS_IMAGE_REF is required}" bash -ec '
+    "${INFRA_IMAGE_REF:?INFRA_IMAGE_REF is required}" bash -ec '
       mkdir /tmp/project
       rsync -a --exclude=.git --exclude=.envrc --exclude="secrets*" --exclude=creds.json /source/ /tmp/project/
       cd /tmp/project

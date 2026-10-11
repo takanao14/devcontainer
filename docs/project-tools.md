@@ -56,13 +56,12 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Ansible lint を確認した。依存取得後の検証はネットワークなしで実行した。
   mise・uv 管理への移行後も同じ検証と、依存グラフのハッシュ改変拒否を確認した。
   Raspberry Pi 構成のビルド、画面・音声・LED の実動作は未確認。
-  インフラ用イメージは未実装。
   uv のロックは GitHub の attestation 検証付きで生成し、チェックサムは公式の .sha256 と一致する。
   導入時はその SHA-256 を検証する。
 
-- DNS イメージは `images/dns/Dockerfile` で dnscontrol 5.3.1、SOPS 3.13.3、
+- インフライメージの DNS 機能は `images/infra/Dockerfile` で dnscontrol 5.3.1、SOPS 3.13.3、
   age 1.3.2、direnv 2.38.1 を提供する。mise 2026.10.4 と用途別の設定・ロックで導入し、
-  各配布物は公式 SHA-256 で検証する。取り込み元は `images/dns/tools/SOURCE` に記録する。
+  各配布物は公式 SHA-256 で検証する。取り込み元は `images/infra/tools/SOURCE` に記録する。
   SOPS は Aqua バックエンドを使用する。mise 2026.10.0 はチェックサム付きロックの
   来歴情報を信頼し、導入時の SLSA 再検証は行わない。署名者情報の欠落は解消していない。
   2026-10-08 にローカル ARM64 で `homelab-private`（`adf7ac2`）の `make check` を
@@ -73,7 +72,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Forgejo workflow は保存済みロックの整合性検査を行い、ビルド・公開は行わない。
   旧 Forgejo CI の実行 #4 では AMD64 のビルド・検証・公開を確認した。
 
-- インフラの初期イメージは `images/infra/Dockerfile` とし、Terraform 1.16.5、
+- インフラ機能の初期構成は `images/infra/Dockerfile` とし、Terraform 1.16.5、
   Terragrunt 1.1.6、Packer 1.16.1 を提供する。取り込み元は homelab の
   `fe14246af3bfa7aa8b6a214dc2538903f92b0631`。Terragrunt は mise 宣言、
   Packer は CI の固定値を参照し、Terraform は既存の厳密な固定値がないため

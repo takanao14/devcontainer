@@ -9,7 +9,7 @@ ShellCheck、Node.js と npm が必要で、Docker daemon とレジストリ認�
 
 `check` はランチャーとリモート操作のモックテスト、候補更新の失敗処理、
 mise ブートストラップのバージョン・チェックサム・実行時検証値の一致、
-共通・DNS・Go・Rust・インフラ の宣言と保存済みロックの整合性、シェル構文・ShellCheck、
+共通・Go・Rust・インフラの宣言と保存済みロックの整合性、シェル構文・ShellCheck、
 npm の48時間の選択期限を確認する。workflow の YAML と埋め込まれたシェルも検査する。
 保存済みロックの検査には Linux x64 / ARM64 の URL・チェックサムと
 Python 依存グラフのファイル存在が含まれる。配布物の取得・インストール成功は保証しない。
@@ -20,7 +20,6 @@ Python 依存グラフのファイル存在が含まれる。配布物の取得�
 make check
 make update-local KIND=common UPDATE_MODE=rebuild
 # 必要な派生イメージだけを選択する:
-make update-local KIND=dns
 make update-local KIND=go
 make update-local KIND=rust
 make update-local KIND=infra
@@ -33,14 +32,14 @@ make update-local KIND=infra
 実際の認証・スマホからの接続・ペアリング再利用は利用者による確認が必要。
 テストは既存の認証情報を使用せず、テスト用ボリュームを終了時に削除する。
 
-DNS は `verify-dns` と `verify-dns-lock` でツール、ダミー暗号化・復号、
+インフラの DNS 機能は `verify-infra` と `verify-infra-lock` でツール、ダミー暗号化・復号、
 ロック不足とチェックサム改変の拒否を確認する。Go は `verify-go` で
 ツールと暗黙のツールチェーン取得の無効化を確認する。
 Rust は `verify-rust` と `verify-rust-lock` でコンポーネント・ネイティブライブラリ・
 Ansible と Python 依存グラフの改変拒否を確認する。
 DNS の改変拒否テストはテスト用配布物の取得を必要とする。
 
-インフラは `verify-infra` で3ツールのバージョン・権限・固定パスと、
+インフラは `verify-infra` で7ツールのバージョン・権限・固定パスと、
 ダミー構成のオフライン検査を行う。`check-infra-project` は homelab の整形と
 Packer の構文のみを確認し、provider・プラグインの設定検証やデプロイを含めない。
 
@@ -58,7 +57,7 @@ Dependency Dashboard の承認後に PR を作成し、自動マージは無効�
 
 ブートストラップの更新では配布チェックサムと検証の固定値を揃える。
 用途別宣言の更新では `make update-locks` を利用端末で実行し、ロック・依存 sidecar の
-差分をレビューする。`make check-locks` は専用コンテナで5用途の両 Linux プラットフォームの
+差分をレビューする。`make check-locks` は専用コンテナで4用途の両 Linux プラットフォームの
 ロックを再生成し、差分を検査する。これらはイメージを生成するローカル専用操作で、
 CI の `check` とは異なる。反映にはホストの rsync が必要。
 マージ前には対象イメージのローカルビルド・検証結果を PR に記録する。
@@ -73,7 +72,7 @@ CI の `check` とは異なる。反映にはホストの rsync が必要。
 PR #11 の per-run イメージ削除は、イメージを生成しない workflow では使用しない。
 専用 cleanup と GC 設定例は本変更で削除する。共有 runner の Docker 設定には触れない。
 
-以前の AMD64 CI では共通・DNS・Go・Rust・インフラ のビルド・検証・公開が成功した。
+以前の AMD64 CI では共通・DNS・Go・Rust のビルド・検証・公開が成功した。
 新しい CI ではその実行時検証を行わない。ローカル運用の確認後に管理者が次を行う。
 
 1. このリポジトリ専用の Actions Secret `REGISTRY_USER` と `REGISTRY_PASSWORD` を削除する。
@@ -92,3 +91,7 @@ PR #11 の per-run イメージ削除は、イメージを生成しない workfl
 
 2026-10-11 にインフラ候補の ARM64 `update-local`、`make check`、Renovate 設定検証と、
 homelab の `check-infra-project` を確認した。AMD64 の実ビルドは未確認。
+
+DNS 統合後も ARM64 の `update-local KIND=infra`、ロック再生成の配布情報一致、
+ロック破損拒否、両プロジェクトのオフライン検査と Renovate 設定検証を確認した。
+稼働中のコンテナの切り替えとペアリング再利用は、統合候補では未確認。
