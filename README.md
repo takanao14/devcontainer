@@ -72,32 +72,11 @@ tests, Python tests, and Ansible lint offline in a disposable source copy.
 It does not connect display, audio, or LED devices or deploy services.
 Declarations and dependency sidecars are in `images/rust/tools`. Use `make lock-rust`
 with a built Rust image and review the config, lock, and sidecar changes together.
-The DNS image installs dnscontrol 5.3.1, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
-through pinned mise 2026.10.4 and the committed platform lockfile. Commands use
-direct image-owned paths, so project mise settings do not switch these tools.
-
-```sh
-make build
-make build-dns
-make verify-dns
-make verify-dns-lock  # Downloads an artifact to test checksum rejection
-make check-dns-project PROJECT=/absolute/path/to/homelab-private
-make codex IMAGE_REF=devcontainer-images:dns-5.3.1 PROJECT=/absolute/path/to/homelab-private NETWORK=bridge
-```
-
-`check-dns-project` runs `dns-record`'s `make check` offline in a disposable
-copy without loading credentials or `.envrc`. Verification uses temporary
-keys and dummy data for encryption; host keys are not mounted. direnv's shell
-hook and environment approval are not enabled automatically.
-
-DNS versions are declared in `images/dns/tools/config.toml`; `SOURCE` records
-their origin. After changing declarations, use `make lock-dns` and review the
-config and lock diff before rebuilding. SOPS uses the Aqua backend; mise trusts
-checksum-backed provenance recorded in the lock without re-verifying SLSA at
-installation time.
 
 The initial infrastructure image provides Terraform 1.16.5, Terragrunt 1.1.6,
-and Packer 1.16.1 using reviewed mise locks for Linux AMD64 and ARM64.
+Packer 1.16.1, DNSControl 5.3.1, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
+using reviewed mise locks for Linux AMD64 and ARM64. DNS and infrastructure
+projects use the same image with separate project mounts and state volumes.
 Terraform is an image pin because homelab does not pin an exact CLI version;
 Terragrunt and Packer match homelab's existing declarations. The image uses
 fixed executable paths and disables HashiCorp checkpoint requests.
@@ -105,16 +84,24 @@ fixed executable paths and disables HashiCorp checkpoint requests.
 ```sh
 make update-local KIND=infra
 # Use the verified candidate printed by the command:
+make check-dns-project INFRA_IMAGE_REF=<verified-infra-reference> PROJECT=/absolute/path/to/homelab-private
 make check-infra-project INFRA_IMAGE_REF=<verified-infra-reference> PROJECT=/absolute/path/to/homelab
 make codex IMAGE_REF=<verified-infra-reference> PROJECT=/absolute/path/to/homelab NETWORK=bridge
 ```
 
 For direct builds, first build the common image, then use `make build-infra`
-and `make verify-infra`. `check-infra-lock` checks both platform records;
+and `make verify-infra` plus `make verify-infra-lock` (downloads a test artifact).
+`check-infra-lock` checks both platform records;
 `update-locks` and `check-locks` include the infrastructure declarations.
 `check-infra-project` mounts only `tf/` and `packer/` read-only and checks a
 disposable copy offline. It checks Terraform/Terragrunt formatting and Packer
 syntax, without provider/plugin validation, backend access, or deployment.
+`check-dns-project` runs homelab-private's `dns-record` checks offline in a
+disposable copy without loading credentials or `.envrc`. Encryption tests use
+temporary keys and dummy data. direnv's shell hook and environment approval
+are not enabled automatically. SOPS uses checksum-backed provenance in the
+reviewed lock without re-verifying SLSA at installation time.
+
 QEMU, Ansible collections, Kubernetes tools, and other infrastructure tools
 remain future additions. Host credentials and Docker/device access are not
 part of this image.
@@ -219,7 +206,7 @@ Use a unique verified candidate for updates:
 
 ```sh
 make update-local KIND=common UPDATE_MODE=rebuild
-# KIND=dns, go, rust, or infra also builds and verifies that derived image.
+# KIND=go, rust, or infra also builds and verifies that derived image.
 # Use the Verified candidate printed by the command:
 make codex IMAGE_REF=devcontainer-images:local-<build-id> PROJECT=/absolute/path/to/project NETWORK=bridge
 ```
@@ -231,8 +218,8 @@ working-tree changes, architecture, selected reference, image ID, versions,
 and success or failure. Failed candidates are retained for investigation.
 Direct `build-*` targets require an existing `IMAGE_REF` and do not rebuild it.
 `make verify-local` checks common tools, permissions, mounts, state persistence,
-and mock remote shutdown. Derived checks use `verify-dns`, `verify-go`,
-`verify-rust`, or `verify-infra`, plus the DNS/Rust lock rejection checks.
+and mock remote shutdown. Derived checks use `verify-go`,
+`verify-rust`, or `verify-infra`, plus the infrastructure/Rust lock rejection checks.
 
 Keep the previous image reference before switching. Stop remote sessions with
 `make codex-remote-stop PROJECT=/absolute/path/to/project`, and close other

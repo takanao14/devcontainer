@@ -4,7 +4,7 @@ set -euo pipefail
 
 kind=${1:-common}
 mode=${2:-build}
-case "$kind" in common|dns|go|rust|infra) ;; *) echo 'KIND must be common, dns, go, rust, or infra' >&2; exit 1 ;; esac
+case "$kind" in common|go|rust|infra) ;; *) echo 'KIND must be common, go, rust, or infra' >&2; exit 1 ;; esac
 case "$mode" in build|rebuild) ;; *) echo 'UPDATE_MODE must be build or rebuild' >&2; exit 1 ;; esac
 docker_command=${DOCKER:-docker}
 make_command=${MAKE:-make}
@@ -39,7 +39,7 @@ if [[ $kind != common ]]; then
     variable="$(printf '%s' "$kind" | tr '[:lower:]' '[:upper:]')_IMAGE_REF"
     "$make_command" "build-$kind" IMAGE_REF="$base_ref" "$variable=$selected_ref"
     "$make_command" "verify-$kind" "$variable=$selected_ref"
-    if [[ $kind == dns || $kind == rust ]]; then
+    if [[ $kind == infra || $kind == rust ]]; then
         "$make_command" "verify-$kind-lock" "$variable=$selected_ref"
     fi
 fi

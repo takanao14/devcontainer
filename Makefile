@@ -5,7 +5,6 @@ IMAGE_REF ?= $(IMAGE):$(TAG)
 GO_IMAGE_REF ?= $(IMAGE):go-1.27.1
 RUST_IMAGE_REF ?= $(IMAGE):rust-1.99.0
 INFRA_IMAGE_REF ?= $(IMAGE):infra
-DNS_IMAGE_REF ?= $(IMAGE):dns-5.3.1
 PROJECT ?= $(CURDIR)
 MOUNTS ?=
 NETWORK ?= none
@@ -13,13 +12,12 @@ DRY_RUN ?= 0
 LOCK_IMAGE_REF ?= $(IMAGE):lock-tools
 
 export INFRA_IMAGE_REF
-export DOCKER IMAGE IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF DNS_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
+export DOCKER IMAGE IMAGE_REF GO_IMAGE_REF RUST_IMAGE_REF PROJECT MOUNTS NETWORK DRY_RUN
 export LOCK_IMAGE_REF
 .PHONY: build-lock-tools check-locks update-locks
 .DEFAULT_GOAL := help
 .PHONY: build-go lock-go check-go-lock verify-go check-go-project check-buf-project
 .PHONY: build-rust lock-rust check-rust-lock verify-rust verify-rust-lock check-rust-project
-.PHONY: build-dns lock-dns check-dns-lock verify-dns verify-dns-lock check-dns-project
 .PHONY: help check-common-lock lock-common build rebuild pull run shell codex claude codex-remote codex-remote-start codex-remote-stop codex-remote-pair codex-remote-shell codex-remote-status test verify smoke smoke-daemon smoke-remote
 
 help: ## Show available targets
@@ -95,25 +93,6 @@ verify-rust-lock: check-rust-lock ## Check corrupted Python dependency graph rej
 check-rust-project: ## Check led-service2 in a disposable copy, offline after fetching crates
 	bash tests/check_rust_project.sh
 
-build-dns: check-base check-dns-lock ## Build the DNS development image on the common image
-	$(DOCKER) build --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(DNS_IMAGE_REF)" images/dns
-
-lock-dns: build ## Refresh both DNS lock platforms with the pinned mise
-	$(DOCKER) build --target mise-bootstrap --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(IMAGE):dns-mise-bootstrap" images/dns
-	$(DOCKER) run --rm --user "$$(id -u):$$(id -g)" --network bridge --cap-drop ALL --security-opt no-new-privileges --mount "type=bind,source=$(CURDIR)/images/dns/tools,target=/tools" -e MISE_CONFIG_FILE=/tools/config.toml -e MISE_DATA_DIR=/tmp/mise-data -e MISE_CACHE_DIR=/tmp/mise-cache -e MISE_STATE_DIR=/tmp/mise-state "$(IMAGE):dns-mise-bootstrap" mise --yes lock --global --platform linux-x64,linux-arm64
-	chmod -R a+rX images/dns/tools
-	$(MAKE) check-dns-lock
-
-verify-dns: ## Check DNS tools and dummy encryption without credentials
-	$(MAKE) verify IMAGE_REF="$(DNS_IMAGE_REF)"
-	bash tests/smoke_dns.sh
-
-check-dns-lock: ## Check declarations and both platform checksum records
-	bash tests/check_tool_lock.sh images/dns/tools
-
-verify-dns-lock: check-dns-lock ## Check missing lock and bad checksum rejection (downloads a test artifact)
-	bash tests/test_dns_lock.sh
-
 check-dns-project: ## Check homelab-private DNS configuration offline without credentials
 	bash tests/check_dns_project.sh
 
@@ -164,7 +143,7 @@ smoke-remote: ## Check remote lifecycle in Docker without credentials
 	bash tests/smoke_codex_remote.sh
 
 .PHONY: check-bootstrap check check-shell check-base verify-local update-local
-check: test check-bootstrap check-common-lock check-dns-lock check-go-lock check-rust-lock check-infra-lock check-shell ## Run CI checks without Docker
+check: test check-bootstrap check-common-lock check-go-lock check-rust-lock check-infra-lock check-shell ## Run CI checks without Docker
 	node tests/test_npm_release_age.cjs
 	bash tests/test_local_update.sh
 	bash tests/test_static_ci.sh
@@ -177,7 +156,7 @@ check-base: ## Require the explicitly selected local base image
 
 verify-local: verify smoke smoke-daemon smoke-remote ## Verify the common image and local lifecycle
 
-update-local: ## Build and verify a unique candidate (KIND=common|dns|go|rust|infra)
+update-local: ## Build and verify a unique candidate (KIND=common|go|rust|infra)
 	@bash scripts/local-update.sh "$(or $(KIND),common)" "$(or $(UPDATE_MODE),build)"
 
 check-bootstrap: ## Check reviewed mise bootstrap version and checksums
@@ -193,6 +172,11 @@ check-infra-lock: ## Check infrastructure declarations and both platform artifac
 verify-infra: ## Verify infrastructure tools and offline syntax checks as non-root
 	$(MAKE) verify IMAGE_REF="$(INFRA_IMAGE_REF)"
 	bash tests/smoke_infra.sh
+	bash tests/smoke_dns.sh
 
 check-infra-project: ## Check homelab Terraform/Terragrunt formatting and Packer syntax offline
 	bash tests/check_infra_project.sh
+
+.PHONY: check-dns-project verify-infra-lock
+verify-infra-lock: check-infra-lock ## Check missing lock and bad checksum rejection (downloads a test artifact)
+	bash tests/test_dns_lock.sh

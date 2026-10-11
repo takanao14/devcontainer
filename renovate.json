@@ -18,7 +18,7 @@
     "images/rust/tools/.mise/locks/**"
   ],
   "mise": {
-    "managerFilePatterns": ["/^(tools/common|images/(go|rust|dns|infra)/tools)/config\\.toml$/"]
+    "managerFilePatterns": ["/^(tools/common|images/(go|rust|infra)/tools)/config\\.toml$/"]
   },
   "customManagers": [
     {
