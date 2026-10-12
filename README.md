@@ -215,7 +215,8 @@ make codex IMAGE_REF=devcontainer-images:local-<build-id> PROJECT=/absolute/path
 removes state. It verifies the common image before building the selected
 component. `.local-builds/<build-id>/result.json` records the source commit,
 working-tree changes, architecture, selected reference, image ID, versions,
-and success or failure. Failed candidates are retained for investigation.
+and success or failure, creation/completion timestamps, and the base image ID.
+Failed candidates are retained until explicit cleanup.
 Direct `build-*` targets require an existing `IMAGE_REF` and do not rebuild it.
 `make verify-local` checks common tools, permissions, mounts, state persistence,
 and mock remote shutdown. Derived checks use `verify-go`,
@@ -263,6 +264,33 @@ until recovery succeeds; delete the temporary verification volume afterward.
 Image and cache cleanup is an explicit operator action; no automatic prune is
 part of builds. Same-commit rebuilds can differ because CLI and APT selection
 also depends on build time.
+
+After switching and verifying a project, record its selected reference:
+
+```sh
+make select-local-image PROJECT=/absolute/path/to/project IMAGE_REF=<verified-reference>
+make protect-local-image IMAGE_REF=<reference-to-retain>
+make list-local-images
+make clean-local-images                # Preview only; defaults to KEEP_DAYS=7
+make clean-local-images APPLY=1         # Rechecks references before removing tags
+make unprotect-local-image IMAGE_REF=<reference-to-release>
+```
+
+Selection records the current and previous reference per canonical project
+path; it does not start or stop containers. Re-selecting the current reference
+preserves its predecessor. Selection requires a matching verified build record.
+Stopped projects remain protected through these records. Register the previous
+reference followed by the current one when adopting an existing environment.
+
+Cleanup retains selections, predecessors, explicit protections, the newest
+verified candidate per kind/architecture, their recorded bases, all container
+references (including stopped containers), and candidates younger than seven
+days. Only tags in recorded builds of this image repository are eligible;
+missing timestamps/identities and unrecorded images remain untouched. Old
+records are not assigned an inferred age. Volumes, backups, build records,
+and build cache are outside cleanup. Builds and retention commands share an
+exclusive lock; after an interrupted process, check that it has exited before
+manually removing `.local-builds/.management-lock`.
 
 Project-specific toolchains are supplied by the derived images. The
 [Project tool inventory](docs/project-tools.md) lists requirements and validation.

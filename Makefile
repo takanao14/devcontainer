@@ -146,6 +146,7 @@ smoke-remote: ## Check remote lifecycle in Docker without credentials
 check: test check-bootstrap check-common-lock check-go-lock check-rust-lock check-infra-lock check-shell ## Run CI checks without Docker
 	node tests/test_npm_release_age.cjs
 	bash tests/test_local_update.sh
+	bash tests/test_local_images.sh
 	bash tests/test_static_ci.sh
 
 check-shell: ## Check shell syntax and ShellCheck diagnostics
@@ -158,6 +159,19 @@ verify-local: verify smoke smoke-daemon smoke-remote ## Verify the common image 
 
 update-local: ## Build and verify a unique candidate (KIND=common|go|rust|infra)
 	@bash scripts/local-update.sh "$(or $(KIND),common)" "$(or $(UPDATE_MODE),build)"
+
+.PHONY: list-local-images select-local-image protect-local-image unprotect-local-image clean-local-images
+export APPLY KEEP_DAYS BUILD_RECORD_DIR
+list-local-images: ## Show recorded images and retention reasons
+	@bash scripts/local-images.sh list
+select-local-image: ## Record PROJECT current/previous verified IMAGE_REF after switching
+	@bash scripts/local-images.sh select
+protect-local-image: ## Preserve IMAGE_REF explicitly
+	@bash scripts/local-images.sh protect
+unprotect-local-image: ## Remove explicit IMAGE_REF protection
+	@bash scripts/local-images.sh unprotect
+clean-local-images: ## Preview obsolete candidates; APPLY=1 deletes eligible tags
+	@bash scripts/local-images.sh clean
 
 check-bootstrap: ## Check reviewed mise bootstrap version and checksums
 	bash tests/check_bootstrap.sh

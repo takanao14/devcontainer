@@ -23,7 +23,8 @@ chmod +x "$fixture/docker" "$fixture/make"
 export DOCKER="$fixture/docker" MAKE="$fixture/make" BUILD_RECORD_DIR="$fixture/records"
 bash scripts/local-update.sh infra rebuild
 record=$(find "$BUILD_RECORD_DIR" -name result.json)
-jq -e '.status == "verified" and .architecture == "arm64" and .kind == "infra" and .mode == "rebuild"' "$record" >/dev/null
+jq -e '.status == "verified" and .architecture == "arm64" and .kind == "infra" and .mode == "rebuild"
+  and (.created_at | type == "number") and .completed_at >= .created_at and .base_image_id == "sha256:test"' "$record" >/dev/null
 base=$(jq -r .base_ref "$record")
 grep -F "make build-infra IMAGE_REF=$base INFRA_IMAGE_REF=" "$LOG" >/dev/null
 grep -F 'make verify-infra-lock INFRA_IMAGE_REF=' "$LOG" >/dev/null
