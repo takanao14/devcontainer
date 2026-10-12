@@ -10,6 +10,11 @@ docker_command=${DOCKER:-docker}
 make_command=${MAKE:-make}
 image=${IMAGE:-devcontainer-images}
 record_root=${BUILD_RECORD_DIR:-.local-builds}
+# shellcheck source=scripts/local-state-lock.sh
+source "$(dirname "$0")/local-state-lock.sh"
+acquire_local_state_lock
+trap 'rmdir "$state_lock"' EXIT
+created_at=$(date +%s)
 commit=$(git rev-parse HEAD)
 dirty=false
 if test -n "$(git status --porcelain --untracked-files=normal)"; then dirty=true; fi
@@ -23,18 +28,26 @@ selected_ref=$base_ref
 if [[ $kind != common ]]; then selected_ref="$image:$kind-local-$build_id"; fi
 status=failed
 write_record() {
+    completed_at=$(date +%s)
+    if [[ -z $image_id ]]; then image_id=$("$docker_command" image inspect "$selected_ref" --format '{{.Id}}' 2>/dev/null) || image_id=''; fi
+    if [[ -z $base_image_id ]]; then base_image_id=$("$docker_command" image inspect "$base_ref" --format '{{.Id}}' 2>/dev/null) || base_image_id=''; fi
     jq -n --arg commit "$commit" --argjson dirty "$dirty" --arg architecture "$architecture" \
         --arg kind "$kind" --arg mode "$mode" --arg base "$base_ref" --arg selected "$selected_ref" \
-        --arg status "$status" --arg id "$image_id" --rawfile versions "$record_dir/versions.txt" \
+        --arg status "$status" --arg id "$image_id" --arg base_id "$base_image_id" \
+        --argjson created "$created_at" --argjson completed "$completed_at" --rawfile versions "$record_dir/versions.txt" \
         '{commit:$commit,dirty:$dirty,architecture:$architecture,kind:$kind,mode:$mode,
-          base_ref:$base,selected_ref:$selected,image_id:$id,status:$status,versions:$versions}' > "$record_dir/result.json"
+          base_ref:$base,selected_ref:$selected,image_id:$id,base_image_id:$base_id,
+          created_at:$created,completed_at:$completed,status:$status,versions:$versions}' > "$record_dir/result.json"
+    rmdir "$state_lock"
 }
 image_id=''
+base_image_id=''
 : > "$record_dir/versions.txt"
 trap write_record EXIT
 export IMAGE_REF="$base_ref"
 "$make_command" "$mode" IMAGE_REF="$base_ref"
 "$make_command" verify-local IMAGE_REF="$base_ref"
+base_image_id=$("$docker_command" image inspect "$base_ref" --format '{{.Id}}')
 if [[ $kind != common ]]; then
     variable="$(printf '%s' "$kind" | tr '[:lower:]' '[:upper:]')_IMAGE_REF"
     "$make_command" "build-$kind" IMAGE_REF="$base_ref" "$variable=$selected_ref"
