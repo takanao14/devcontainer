@@ -2,9 +2,9 @@
 
 ## 責務
 
-`.forgejo/workflows/image.yml` は main の push、pull request、手動実行で
+`.github/workflows/checks.yml` は main の push、pull request、手動実行で
 `make check` を実行する。イメージの生成・公開、コンテナ起動、ロック再生成は含まない。
-runner のラベルは `ubuntu-24.04`。Bash、Make、Git、jq、Mike Farah yq v4、
+GitHub-hosted runner は `ubuntu-24.04`。Bash、Make、Git、jq、Mike Farah yq v4、
 ShellCheck、Node.js と npm が必要で、Docker daemon とレジストリ認証は不要。
 
 `check` はランチャーとリモート操作のモックテスト、候補更新の失敗処理、
@@ -50,7 +50,7 @@ Packer の構文のみを確認し、provider・プラグインの設定検証�
 
 ## 依存更新
 
-Renovate は既存の `takanao/renovate` が実行し、このリポジトリへの Write 権限を必要とする。
+依存更新は他の GitHub リポジトリと同じ Renovate App の対象とする。対象追加と動作確認は移行計画に従う。
 更新候補には2日の待機期間を適用し、公開日時不明の候補は採用しない。
 Dependency Dashboard の承認後に PR を作成し、自動マージは無効。
 生成物 `images/rust/tools/.mise/locks/**` は検出対象外とする。
@@ -62,10 +62,7 @@ Dependency Dashboard の承認後に PR を作成し、自動マージは無効�
 CI の `check` とは異なる。反映にはホストの rsync が必要。
 マージ前には対象イメージのローカルビルド・検証結果を PR に記録する。
 
-既存 Renovate の GitHub fine-grained token による依存取得は確認済み。
-同 runner は IPv6 のインターネット経路を持たないため、手動・定期実行に
-`--dns-result-order=ipv4first --no-network-family-autoselection` を使用する。
-このリポジトリの CI 簡素化は Renovate の実行設定を変更しない。
+旧 Forgejo Renovate のトークン・IPv4 設定は、他の対象リポジトリのために保持する。
 
 ## 旧 CI からの整理
 

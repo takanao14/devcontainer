@@ -120,3 +120,8 @@ Forgejo の未完了 PR は準備変更の作成前にはなかった。GitHub �
 両 workflow の静的検査を準備し、ローカルの `make check` を確認した。
 GitHub への Git 履歴コピー、GitHub CI の実行、Renovate App の対象追加、
 正本の切り替えは準備変更のマージ後に行う。
+
+PR #19 マージ後の `5b61e74eae3bb73772659e5b6c9594fa46f75b51` を GitHub の main にコピーし、
+コミット ID の一致と GitHub の main CI 成功を確認した。ローカルの `origin` は GitHub、
+`forgejo` は旧リポジトリを参照する。作業ディレクトリとコンテナの状態は保持している。
+Renovate App の対象追加は利用者に依頼済み。CLI の認証では App の対象設定を取得できない。

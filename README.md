@@ -11,7 +11,7 @@ Docker must be running on the host. The launcher uses Bash and jq; YAML mounts
 require Mike Farah yq v4. No Python runtime is required.
 
 Each usage machine builds and verifies its own native images. Apple Silicon
-Macs use ARM64 through Docker / OrbStack. Forgejo CI runs static repository
+Macs use ARM64 through Docker / OrbStack. GitHub Actions runs static repository
 checks without building containers or publishing images.
 
 ```sh
@@ -182,21 +182,19 @@ Stop the remote environment before switching images, then start it again.
 `make verify` checks CLI versions and user permissions without credentials.
 Resolved versions are recorded in `/usr/local/share/devcontainer-images/versions.txt`.
 
-[Forgejo Actions](.forgejo/workflows/image.yml) runs `make check` on pull requests,
+[GitHub Actions](.github/workflows/checks.yml) runs `make check` on pull requests,
 main pushes, and manual runs. Checks include mock launcher/lifecycle tests,
 committed lock consistency, shell syntax, ShellCheck, and npm release-age tests.
 The runner needs Bash, Make, Git, jq, Mike Farah yq v4, ShellCheck, Node.js, and npm;
 Docker and registry credentials are not required. Runtime checks run locally.
 See [CI and local verification](docs/ci.md) for coverage and migration cleanup.
-The equivalent [GitHub workflow](.github/workflows/checks.yml) is prepared for
-migration to `takanao14/devcontainer`; Forgejo remains the current source of truth
-until the [migration checks](docs/github-migration-plan.md) pass.
 
 `renovate.json` applies the two-day cooldown to update candidates and includes
 the custom mise config paths and mise/rustup bootstrap versions. Bootstrap
 updates also require reviewing the published checksums and version checks.
-The existing `takanao/renovate` service manages this repository; bot access and
-dependency lookup with a GitHub fine-grained token have been verified.
+Dependency updates use the GitHub Renovate App after this repository is added
+to its installation. The previous Forgejo service is retired for this repository
+through the migration procedure.
 Update proposals require Dependency Dashboard approval and are not automatically
 merged. Tool locks for Linux x64 and ARM64 are regenerated and compared locally. Run `make update-locks` to apply generated locks locally for review;
 `make check-locks` checks them without modifying the working tree. These targets

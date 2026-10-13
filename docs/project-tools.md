@@ -42,7 +42,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   mise 管理への移行後も、両プロジェクトの同じ検証をローカル ARM64 で確認した。
   リモート生成は bridge、それ以降の Go 検証はネットワークなしで実行する。
   派生イメージのビルド・実行時検証は利用端末で行う。
-  Go/API の両アーキテクチャ向けロック検査は Forgejo workflow に含む。
+  Go/API の両アーキテクチャ向けロック検査は GitHub workflow に含む。
 
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
   protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.5、
@@ -69,7 +69,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   暗号化・復号を確認し、direnv もダミー環境変数で確認した。
   ロック不足・不正チェックサムの拒否、プロジェクト設定による暗黙の切り替えがないことも
   確認した。実際の秘密情報の供給・復号と DNS preview/push は検証対象に含めていない。
-  Forgejo workflow は保存済みロックの整合性検査を行い、ビルド・公開は行わない。
+  GitHub workflow は保存済みロックの整合性検査を行い、ビルド・公開は行わない。
   旧 Forgejo CI の実行 #4 では AMD64 のビルド・検証・公開を確認した。
 
 - インフラ機能の初期構成は `images/infra/Dockerfile` とし、Terraform 1.16.5、
