@@ -188,6 +188,9 @@ committed lock consistency, shell syntax, ShellCheck, and npm release-age tests.
 The runner needs Bash, Make, Git, jq, Mike Farah yq v4, ShellCheck, Node.js, and npm;
 Docker and registry credentials are not required. Runtime checks run locally.
 See [CI and local verification](docs/ci.md) for coverage and migration cleanup.
+The equivalent [GitHub workflow](.github/workflows/checks.yml) is prepared for
+migration to `takanao14/devcontainer`; Forgejo remains the current source of truth
+until the [migration checks](docs/github-migration-plan.md) pass.
 
 `renovate.json` applies the two-day cooldown to update candidates and includes
 the custom mise config paths and mise/rustup bootstrap versions. Bootstrap
