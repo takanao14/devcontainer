@@ -8,4 +8,4 @@ for directory in scripts tests tools images; do
 done
 while IFS= read -r -d '' workflow; do
     yq -r '.jobs[].steps[] | select(has("run")) | .run' "$workflow" | bash -n
-done < <(find .forgejo/workflows -type f -name '*.yml' -print0)
+done < <(find .forgejo/workflows .github/workflows -type f -name '*.yml' -print0)
