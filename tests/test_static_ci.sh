@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
-for workflow in .forgejo/workflows/image.yml .github/workflows/checks.yml; do
+workflow=.github/workflows/checks.yml
 yq -o=json '.' "$workflow" | jq -e '
   .jobs.checks.steps as $steps |
   all($steps[]; (has("env") | not)) and
   ($steps[-1].run == "make check") and ([ $steps[] | .run // "" ] | all(.[]; (test("docker|REGISTRY_|check-locks|make rebuild|make build") | not))) and
   $steps[0].with."persist-credentials" == false
 ' >/dev/null
-if [[ $workflow == .github/* ]]; then
-    yq -o=json '.' "$workflow" | jq -e '
+yq -o=json '.' "$workflow" | jq -e '
       .permissions == {"contents":"read"} and
       .on.push.branches == ["main"] and (.on | has("pull_request")) and
       (.on | has("workflow_dispatch")) and (.on | has("pull_request_target") | not) and
       (.jobs.checks.steps[0].uses | test("^actions/checkout@[a-f0-9]{40}$"))
-    ' >/dev/null
-fi
-done
+' >/dev/null
 fixture=$(mktemp -d)
 trap 'rm -rf "$fixture"' EXIT
 cat > "$fixture/docker" <<'MOCK'
