@@ -10,7 +10,7 @@ Dockerfile、ツール宣言、ロック、更新候補は用途ごとに重複�
 | --- | --- |
 | ビルド定義 | `images/infra/Dockerfile` |
 | ツール管理 | `images/infra/tools/config.toml`、`mise.lock`、`SOURCE` |
-| DNS ツール | DNSControl 5.3.1、SOPS 3.13.3、age 1.3.2、direnv 2.38.1 |
+| DNS ツール | DNSControl 5.4.0、SOPS 3.13.3、age 1.3.2、direnv 2.38.1 |
 | インフラツール | Terraform 1.16.5、Terragrunt 1.1.6、Packer 1.16.1 |
 | 更新の入口 | `make update-local KIND=infra` |
 | イメージ参照 | `INFRA_IMAGE_REF`。起動時は従来どおり `IMAGE_REF` |

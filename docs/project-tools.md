@@ -59,7 +59,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   uv のロックは GitHub の attestation 検証付きで生成し、チェックサムは公式の .sha256 と一致する。
   導入時はその SHA-256 を検証する。
 
-- インフライメージの DNS 機能は `images/infra/Dockerfile` で dnscontrol 5.3.1、SOPS 3.13.3、
+- インフライメージの DNS 機能は `images/infra/Dockerfile` で dnscontrol 5.4.0、SOPS 3.13.3、
   age 1.3.2、direnv 2.38.1 を提供する。mise 2026.10.10 と用途別の設定・ロックで導入し、
   各配布物は公式 SHA-256 で検証する。取り込み元は `images/infra/tools/SOURCE` に記録する。
   SOPS は Aqua バックエンドを使用する。mise 2026.10.0 はチェックサム付きロックの
