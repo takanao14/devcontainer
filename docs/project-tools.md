@@ -45,7 +45,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
   Go/API の両アーキテクチャ向けロック検査は GitHub workflow に含む。
 
 - Rust/LED イメージは `images/rust/Dockerfile` で Rust 1.99.0、rustfmt、Clippy、
-  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.12.23、ansible-core 2.21.5、
+  protoc、ALSA・X11/Wayland の開発ライブラリ、Python、uv 0.13.1、ansible-core 2.21.5、
   ansible-lint 26.9.0 を提供する。rustup 1.29.1 のインストーラーは公式 SHA-256 で検証し、
   mise 2026.10.10 と `images/rust/tools` の設定で Rust のバージョン・プロファイル・
   コンポーネントを指定する。Ansible の推移的依存は uv.lock のハッシュ付きグラフを使用し、
