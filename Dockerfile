@@ -1,7 +1,7 @@
 FROM ubuntu:26.04 AS mise-bootstrap
 
 # renovate: datasource=github-releases depName=jdx/mise
-ARG MISE_VERSION=2026.10.4
+ARG MISE_VERSION=2026.10.10
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -15,8 +15,8 @@ RUN apt-get update \
 RUN set -eu; \
     arch=$(dpkg --print-architecture); \
     case "$arch" in \
-        amd64) asset=x64; checksum=2b8ce21f550872807bcaabf45b6bc5c64bfbd6dc3bf49dd4e67de700ef3ceb75 ;; \
-        arm64) asset=arm64; checksum=9013ce1d7d9bbbf65254cda178562f5450c474a705907c18b77e6b678bb10041 ;; \
+        amd64) asset=x64; checksum=7d79972e15549b286dcf9e25ef8c4fcef3d9fd7c0332d11cdfbc7d2842c418be ;; \
+        arm64) asset=arm64; checksum=3978fbccfa2284b12e46cbf6df53cae118ec1f2fa780b6a204e6c9c792b620f6 ;; \
         *) echo "Unsupported mise architecture: $arch" >&2; exit 1 ;; \
     esac; \
     curl -fsSL --retry 3 "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-$asset" -o /tmp/mise; \

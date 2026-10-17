@@ -32,7 +32,7 @@ container; it does not attach to the Make-managed remote environment or mount
 the launcher's agent state volumes.
 
 The Go/API image adds Go 1.27.2 and Buf 1.73.0 with verified release checksums.
-Pinned mise 2026.10.4 installs them from committed Linux AMD64 / ARM64 locks.
+Pinned mise 2026.10.10 installs them from committed Linux AMD64 / ARM64 locks.
 Runtime commands use image-owned paths rather than project-selected mise shims.
 Toolchain downloads at runtime are disabled (`GOTOOLCHAIN=local`).
 
@@ -111,7 +111,7 @@ QEMU, Ansible collections, Kubernetes tools, and other infrastructure tools
 remain future additions. Host credentials and Docker/device access are not
 part of this image.
 
-The common image supplies checksum-pinned mise 2026.10.4 and installs yq 4.54.1
+The common image supplies checksum-pinned mise 2026.10.10 and installs yq 4.54.1
 from `tools/common`'s committed lock. APT still supplies OS packages and npm
 installs agent CLIs under the local image-update policy. `make check-common-lock`
 checks the application lock; `make lock-common` refreshes its platform metadata.
