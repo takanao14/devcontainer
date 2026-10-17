@@ -30,7 +30,7 @@ Python のプロジェクト用ライブラリや Ansible は共通イメージ�
 
 ## バージョンと環境の詳細
 
-- 最初の派生イメージは `images/go/Dockerfile` とし、Go 1.27.1 と Buf 1.73.0 を提供する。
+- 最初の派生イメージは `images/go/Dockerfile` とし、Go 1.27.2 と Buf 1.73.0 を提供する。
   AMD64 / ARM64 の公式アーカイブを SHA-256 で検証し、`GOTOOLCHAIN=local` とする。
   mise 2026.10.4 と `images/go/tools` の設定・ロックを使用する。
   実行時はイメージ所有の固定パスを使用し、プロジェクトの mise 設定では切り替えない。

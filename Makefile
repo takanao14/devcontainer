@@ -2,7 +2,7 @@ DOCKER ?= docker
 IMAGE ?= devcontainer-images
 TAG ?= ubuntu-26.04
 IMAGE_REF ?= $(IMAGE):$(TAG)
-GO_IMAGE_REF ?= $(IMAGE):go-1.27.1
+GO_IMAGE_REF ?= $(IMAGE):go-1.27.2
 RUST_IMAGE_REF ?= $(IMAGE):rust-1.99.0
 INFRA_IMAGE_REF ?= $(IMAGE):infra
 PROJECT ?= $(CURDIR)
@@ -54,7 +54,7 @@ verify-go: ## Check the Go toolchain and inherited agent environment
 	$(MAKE) verify IMAGE_REF="$(GO_IMAGE_REF)"
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(GO_IMAGE_REF)" bash -ec 'test "$$(id -u)" != 0; test "$$(go env GOTOOLCHAIN)" = local; diff /usr/local/share/devcontainer-images/go-version.txt <(go version); test -x "$$(go env GOROOT)/bin/go"; gcc --version >/dev/null'
 	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(GO_IMAGE_REF)" bash -ec 'diff /usr/local/share/devcontainer-images/buf-version.txt <(buf --version); test "$$(buf --version)" = 1.73.0'
-	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(GO_IMAGE_REF)" bash -ec 'test ! -w /opt/dev-tools/mise; fixture=$$(mktemp -d); trap "rm -rf \"$$fixture\"" EXIT; cd "$$fixture"; printf "[tools]\ngo = \"0.0.0\"\nbuf = \"0.0.0\"\n" > mise.toml; test "$$(go env GOVERSION)" = go1.27.1; test "$$(buf --version)" = 1.73.0'
+	$(DOCKER) run --rm --network none --cap-drop ALL --security-opt no-new-privileges "$(GO_IMAGE_REF)" bash -ec 'test ! -w /opt/dev-tools/mise; fixture=$$(mktemp -d); trap "rm -rf \"$$fixture\"" EXIT; cd "$$fixture"; printf "[tools]\ngo = \"0.0.0\"\nbuf = \"0.0.0\"\n" > mise.toml; test "$$(go env GOVERSION)" = go1.27.2; test "$$(buf --version)" = 1.73.0'
 
 lock-go: build ## Refresh both Go/API lock platforms with the pinned mise
 	$(DOCKER) build --target mise-bootstrap --build-arg "BASE_IMAGE=$(IMAGE_REF)" -t "$(IMAGE):go-mise-bootstrap" images/go
