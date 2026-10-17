@@ -14,6 +14,11 @@ Each usage machine builds and verifies its own native images. Apple Silicon
 Macs use ARM64 through Docker / OrbStack. GitHub Actions runs static repository
 checks without building containers or publishing images.
 
+Updates to `main` require a pull request and a successful GitHub Actions `checks`
+job, with zero required approvals. Deletion and force pushes are blocked, with
+no owner or bot bypass. Image changes also require local build and verification
+results in the PR; see [CI responsibilities](docs/ci.md).
+
 ```sh
 make build
 make shell PROJECT=/absolute/path/to/project

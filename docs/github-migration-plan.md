@@ -27,8 +27,8 @@ dotfiles と homelab は2日待機と依存ごとのマージ方針を持つ。
 
 CI は Docker の利用、ロック再生成、コンテナ起動、認証状態の取得を必要としない。
 トークンの権限は GitHub の[最小権限設定](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token)に従う。
-main は直接更新・force push を通常手順とせず、PR と静的検査を更新条件とする。
-GitHub の契約・公開範囲に応じたブランチ保護の利用可否は設定時に確認する。
+main の Ruleset は有効とし、PR 必須・承認0人・GitHub Actions の `checks` 成功必須とする。
+main の削除・force push を禁止し、所有者・Bot のバイパスを設けない。
 
 Git のコピーと Forgejo の PR・Issue・実行履歴は別の対象とする。
 過去の番号付きリンクは Forgejo に残し、新規の PR・Issue は GitHub で作成する。

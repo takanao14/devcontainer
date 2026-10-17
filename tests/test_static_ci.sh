@@ -10,7 +10,13 @@ yq -o=json '.' "$workflow" | jq -e '
 yq -o=json '.' "$workflow" | jq -e '
       .permissions == {"contents":"read"} and
       .on.push.branches == ["main"] and (.on | has("pull_request")) and
+      (.on.pull_request == null or .on.pull_request == {}) and
       (.on | has("workflow_dispatch")) and (.on | has("pull_request_target") | not) and
+      (.jobs | keys == ["checks"]) and
+      (.jobs.checks | has("if") | not) and
+      (.jobs.checks | has("strategy") | not) and
+      (.jobs.checks | has("continue-on-error") | not) and
+      (.jobs.checks.steps | all(.[]; (has("if") | not) and (has("continue-on-error") | not))) and
       (.jobs.checks.steps[0].uses | test("^actions/checkout@[a-f0-9]{40}$"))
 ' >/dev/null
 fixture=$(mktemp -d)
