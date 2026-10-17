@@ -1,4 +1,7 @@
 yq: takanao14/dotfiles@44714eb116cdfea3e67be700121dcd005248e28f, selected from homelab/scripts/install/vendor.
-bootstrap: mise 2026.10.4; official SHASUMS256.txt.
-linux-x64: 2b8ce21f550872807bcaabf45b6bc5c64bfbd6dc3bf49dd4e67de700ef3ceb75
-linux-arm64: 9013ce1d7d9bbbf65254cda178562f5450c474a705907c18b77e6b678bb10041
+bootstrap: mise 2026.10.10; official SHASUMS256.txt.
+release: 2026-10-14T10:11:55Z; selected after the 48-hour cooldown.
+validation: Both Linux artifacts match published SHA-256 values; local image build/verify
+and lock regeneration with the new mise remain required (Docker daemon unavailable).
+linux-x64: 7d79972e15549b286dcf9e25ef8c4fcef3d9fd7c0332d11cdfbc7d2842c418be
+linux-arm64: 3978fbccfa2284b12e46cbf6df53cae118ec1f2fa780b6a204e6c9c792b620f6
