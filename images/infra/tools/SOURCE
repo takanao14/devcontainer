@@ -23,4 +23,7 @@ Linux AMD64/ARM64 URLs, asset IDs, and SHA256 values updated from the official G
 both downloaded artifacts match the published release digests. Container lock regeneration and
 image build/verification remain required because the local Docker daemon was unavailable.
 
-dnscontrol: 5.3.1 selected by Renovate after the release-age cooldown; platform artifacts regenerated with mise 2026.10.3.
+dnscontrol: 5.4.0 released 2026-10-09T15:28:47Z; selected after the release-age cooldown.
+Linux AMD64/ARM64 URLs, asset IDs, and SHA256 values updated from the official GitHub release;
+both downloaded archives match checksums.txt. Container lock regeneration and image build/verify
+remain required because the local Docker daemon was unavailable.

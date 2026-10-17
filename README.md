@@ -79,7 +79,7 @@ Declarations and dependency sidecars are in `images/rust/tools`. Use `make lock-
 with a built Rust image and review the config, lock, and sidecar changes together.
 
 The initial infrastructure image provides Terraform 1.16.5, Terragrunt 1.1.6,
-Packer 1.16.1, DNSControl 5.3.1, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
+Packer 1.16.1, DNSControl 5.4.0, SOPS 3.13.3, age 1.3.2, and direnv 2.38.1
 using reviewed mise locks for Linux AMD64 and ARM64. DNS and infrastructure
 projects use the same image with separate project mounts and state volumes.
 Terraform is an image pin because homelab does not pin an exact CLI version;

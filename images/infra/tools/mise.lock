@@ -97,18 +97,18 @@ checksum = "sha256:2bc2fcfff033265c9e02ca0351f01794eb122f62a9b2a49a3294b9e49eaab
 url = "https://releases.hashicorp.com/terraform/1.16.5/terraform_1.16.5_linux_amd64.zip"
 
 [[tools."github:DNSControl/dnscontrol"]]
-version = "5.3.1"
+version = "5.4.0"
 backend = "github:DNSControl/dnscontrol"
-specifiers = ["v5.3.1"]
+specifiers = ["v5.4.0"]
 
 [tools."github:DNSControl/dnscontrol"."platforms.linux-arm64"]
-checksum = "sha256:9c4ab854053c7520a984c8ba79dea74c7491ca737305f08bb7e67c1592c4c521"
-url = "https://github.com/DNSControl/dnscontrol/releases/download/v5.3.1/dnscontrol_5.3.1_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/DNSControl/dnscontrol/releases/assets/619040752"
+checksum = "sha256:a624f6b5c37332fcef560214d13e946abd63c115e77928e06413bd5a1361ae38"
+url = "https://github.com/DNSControl/dnscontrol/releases/download/v5.4.0/dnscontrol_5.4.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/DNSControl/dnscontrol/releases/assets/625244529"
 provenance = "github-attestations"
 
 [tools."github:DNSControl/dnscontrol"."platforms.linux-x64"]
-checksum = "sha256:44d545102124e38a045dbaec83823f63cf88a7cded8ce68b5f561cf2026b5dd4"
-url = "https://github.com/DNSControl/dnscontrol/releases/download/v5.3.1/dnscontrol_5.3.1_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/DNSControl/dnscontrol/releases/assets/619040666"
+checksum = "sha256:e0eb56cfc8c37b30460c5ef8ffbe635e983a7ddaebe0680824d76f92874e7916"
+url = "https://github.com/DNSControl/dnscontrol/releases/download/v5.4.0/dnscontrol_5.4.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/DNSControl/dnscontrol/releases/assets/625244626"
 provenance = "github-attestations"
