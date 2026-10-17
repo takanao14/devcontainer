@@ -31,7 +31,7 @@ An IDE connection to the container is optional. This repository's
 container; it does not attach to the Make-managed remote environment or mount
 the launcher's agent state volumes.
 
-The Go/API image adds Go 1.27.1 and Buf 1.73.0 with verified release checksums.
+The Go/API image adds Go 1.27.2 and Buf 1.73.0 with verified release checksums.
 Pinned mise 2026.10.4 installs them from committed Linux AMD64 / ARM64 locks.
 Runtime commands use image-owned paths rather than project-selected mise shims.
 Toolchain downloads at runtime are disabled (`GOTOOLCHAIN=local`).
@@ -43,7 +43,7 @@ make verify-go
 make check-go-lock
 make check-go-project PROJECT=/absolute/path/to/go-project
 make check-buf-project PROJECT=/absolute/path/to/led-image-api
-make codex IMAGE_REF=devcontainer-images:go-1.27.1 PROJECT=/absolute/path/to/go-project NETWORK=bridge
+make codex IMAGE_REF=devcontainer-images:go-1.27.2 PROJECT=/absolute/path/to/go-project NETWORK=bridge
 ```
 
 `check-go-project` downloads dependencies over bridge networking, then runs
